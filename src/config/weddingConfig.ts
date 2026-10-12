@@ -82,7 +82,7 @@ export const weddingConfig = {
     monogram: 'C & M',
     tagline: 'are getting married!',
     envelopeGreeting: 'You are invited!',
-    envelopePrompt: 'Click the wax seal to open your invitation',
+    envelopePrompt: 'Tap and hold the wax seal to open your invitation',
     hashtag: '#AmazingGRACEWithCYDRILL',
     closingMessage: 'We would be honoured to share this special day with you!',
     storyQuote:

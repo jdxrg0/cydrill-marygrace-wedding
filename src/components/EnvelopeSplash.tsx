@@ -19,7 +19,7 @@ import confetti from 'canvas-confetti';
 import { weddingConfig } from '../config/weddingConfig';
 import { soundManager } from '../utils/sound';
 import { getGoogleCalendarUrl, openGoogleCalendarApp } from '../utils/calendar';
-import { BotanicalSprig, BohoSunDivider } from './Dividers';
+import { BotanicalSprig } from './Dividers';
 
 interface EnvelopeSplashProps {
   onOpenComplete: (startAudio: boolean) => void;
@@ -34,12 +34,6 @@ type OpenStage =
   | 'card-peeking'
   | 'card-presented'
   | 'transitioning';
-
-interface SparkleTrail {
-  id: number;
-  x: number;
-  y: number;
-}
 
 /**
  * Extracts optional personalized recipient name from URL
@@ -142,14 +136,16 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const [copiedHashtag, setCopiedHashtag] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // 3D Parallax tilt coordinates
+  // 3D Parallax tilt
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
-  // Interactive Wax Seal Press-and-Hold Charge Progress (0 to 100)
+  // Wax seal tap-and-hold charge (0-100)
   const [holdProgress, setHoldProgress] = useState(0);
+  const [showHoldHint, setShowHoldHint] = useState(false);
   const holdIntervalRef = useRef<number | null>(null);
+  const holdHintTimeoutRef = useRef<number | null>(null);
 
-  // Stamp click count and animation
+  // Stamp click count and feedback animation
   const [stampClicks, setStampClicks] = useState(1);
   const [stampSquash, setStampSquash] = useState(false);
 
@@ -158,9 +154,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const [recipientName, setRecipientName] = useState<string>(initialGuest || '');
   const [isEditingRecipient, setIsEditingRecipient] = useState(false);
   const [editInputValue, setEditInputValue] = useState(initialGuest || '');
-
-  // Magic Sparkle Cursor Trail
-  const [sparkleTrail, setSparkleTrail] = useState<SparkleTrail[]>([]);
 
   const sealRef = useRef<HTMLDivElement | null>(null);
   const autoProceedTimerRef = useRef<number | null>(null);
@@ -174,11 +167,14 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     stage === 'card-presented' ||
     stage === 'transitioning';
 
-  // Clear timers on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (holdIntervalRef.current !== null) {
         clearInterval(holdIntervalRef.current);
+      }
+      if (holdHintTimeoutRef.current !== null) {
+        clearTimeout(holdHintTimeoutRef.current);
       }
       if (autoProceedTimerRef.current !== null) {
         window.clearTimeout(autoProceedTimerRef.current);
@@ -186,42 +182,21 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     };
   }, []);
 
-  // 3D Tilt calculation on mouse move
+  // 3D Tilt calculation on mouse move (only active before opening starts)
   const handleEnvelopeMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isOpening) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setTilt({
-      x: -(y * 12),
-      y: x * 14,
+      x: -(y * 10),
+      y: x * 12,
     });
   };
 
   const handleEnvelopeMouseLeave = () => {
     setTilt({ x: 0, y: 0 });
   };
-
-  // Sparkle cursor trail
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (Math.random() > 0.4) {
-      const point: SparkleTrail = {
-        id: Date.now() + Math.random(),
-        x: e.clientX,
-        y: e.clientY,
-      };
-      setSparkleTrail((prev) => [...prev.slice(-10), point]);
-    }
-  };
-
-  // Remove sparkles over time
-  useEffect(() => {
-    if (sparkleTrail.length === 0) return;
-    const timer = setTimeout(() => {
-      setSparkleTrail((prev) => prev.slice(1));
-    }, 450);
-    return () => clearTimeout(timer);
-  }, [sparkleTrail]);
 
   // Celebratory confetti burst originating from the wax seal
   const fireConfetti = () => {
@@ -236,26 +211,26 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       }
 
       confetti({
-        particleCount: 55,
-        spread: 68,
+        particleCount: 50,
+        spread: 65,
         origin: { x, y },
         colors: ['#E8C5C8', '#D49499', '#C8A97E', '#6B8467', '#FAFBF9'],
-        ticks: 220,
+        ticks: 200,
         gravity: 0.85,
         scalar: 1.05,
       });
 
       setTimeout(() => {
         confetti({
-          particleCount: 32,
-          spread: 90,
+          particleCount: 30,
+          spread: 85,
           origin: { x, y: Math.max(0.1, y - 0.04) },
           colors: ['#FAFBF9', '#C8A97E', '#E8C5C8', '#B8C7B4'],
-          ticks: 180,
+          ticks: 160,
           gravity: 0.9,
           scalar: 0.85,
         });
-      }, 150);
+      }, 140);
     } catch {
       // Confetti fallback
     }
@@ -264,6 +239,9 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   // Action: Open Envelope Sequence
   const handleOpen = () => {
     if (isOpening) return;
+
+    // Reset tilt so envelope straightens out
+    setTilt({ x: 0, y: 0 });
 
     if (withMusic && onStartAudio) {
       onStartAudio();
@@ -277,22 +255,21 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       setStage('flap-open');
     }, 320);
 
-    // Stage 3: Card emerges slightly and invites the user to pull/drag it out
+    // Stage 3: Card peeks out of the pocket
     setTimeout(() => {
       setStage('card-peeking');
     }, 600);
   };
 
-  // Action: User pulls or clicks to fully reveal the card
+  // Action: Reveal the card to presented state (either by drag or tap)
   const handleRevealCard = () => {
     if (stage === 'card-presented' || stage === 'transitioning') return;
 
     soundManager.playCardSlideSound();
     setStage('card-presented');
 
-    // Soft celebration mini-burst
     confetti({
-      particleCount: 25,
+      particleCount: 22,
       spread: 50,
       origin: { y: 0.4 },
       colors: ['#C8A97E', '#FAFBF9', '#D49499'],
@@ -319,11 +296,23 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     handleProceed();
   };
 
-  // Action: Interactive Wax Seal Press-and-Hold
+  // Action: Interactive Wax Seal Tap-and-Hold
   const handleSealPointerDown = () => {
     if (isOpening) return;
+
+    // Synchronously unlock audio inside touch gesture so iOS Safari grants permission
+    if (withMusic && onStartAudio) {
+      onStartAudio();
+    }
+
+    if (holdHintTimeoutRef.current !== null) {
+      clearTimeout(holdHintTimeoutRef.current);
+      holdHintTimeoutRef.current = null;
+    }
+    setShowHoldHint(false);
+
     const startTime = Date.now();
-    const duration = 500; // 500ms to break
+    const duration = 650; // 650ms tap-and-hold duration
     holdIntervalRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(100, Math.floor((elapsed / duration) * 100));
@@ -336,7 +325,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         setHoldProgress(0);
         handleOpen();
       }
-    }, 25);
+    }, 20);
   };
 
   const handleSealPointerUp = () => {
@@ -344,13 +333,27 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       clearInterval(holdIntervalRef.current);
       holdIntervalRef.current = null;
     }
-    // If it was a short tap (< 500ms), still open smoothly!
-    if (!isOpening && holdProgress < 100) {
-      setHoldProgress(0);
-      handleOpen();
+
+    // Require holding until 100%. If released early, do NOT open; prompt to tap and hold!
+    if (!isOpening) {
+      if (holdProgress < 100) {
+        setHoldProgress(0);
+        setShowHoldHint(true);
+        holdHintTimeoutRef.current = window.setTimeout(() => {
+          setShowHoldHint(false);
+        }, 2200);
+      }
     } else {
       setHoldProgress(0);
     }
+  };
+
+  const handleSealPointerCancel = () => {
+    if (holdIntervalRef.current !== null) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    setHoldProgress(0);
   };
 
   // Action: Interactive Postage Stamp Tap
@@ -368,7 +371,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       scalar: 0.8,
     });
 
-    setTimeout(() => setStampSquash(false), 220);
+    setTimeout(() => setStampSquash(false), 200);
   };
 
   // Action: Flip 3D Invitation Card
@@ -384,12 +387,12 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     navigator.clipboard.writeText(couple.hashtag);
     setCopiedHashtag(true);
     confetti({
-      particleCount: 22,
+      particleCount: 20,
       spread: 50,
       origin: { y: 0.6 },
       colors: ['#6B8467', '#D49499', '#C8A97E'],
     });
-    setTimeout(() => setCopiedHashtag(false), 2400);
+    setTimeout(() => setCopiedHashtag(false), 2200);
   };
 
   // Action: Save Personalized Name
@@ -416,7 +419,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     }
     navigator.clipboard.writeText(url.toString());
     setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2200);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   return (
@@ -425,7 +428,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.65, ease: 'easeInOut' }}
-      onPointerMove={handlePointerMove}
       className={`fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden paper-grain px-3 py-3 sm:px-6 sm:py-5 select-none ${
         isStationery
           ? 'bg-gradient-to-br from-[#FAFBF9] via-[#F2F5F0] to-[#E2EAE0]'
@@ -434,19 +436,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     >
       {/* Ambient Floating Rose Petals & Gold Dust Particles */}
       <FloatingPetals />
-
-      {/* Magic Sparkle Cursor Trail */}
-      <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
-        {sparkleTrail.map((pt) => (
-          <div
-            key={pt.id}
-            style={{ left: pt.x, top: pt.y }}
-            className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-500 opacity-90 scale-100"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-champagne drop-shadow-[0_0_6px_rgba(200,169,126,0.9)] animate-ping" />
-          </div>
-        ))}
-      </div>
 
       {/* Ambient Sage & Blush Glow Orbs */}
       <div className="pointer-events-none absolute top-10 left-10 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-blush/25 blur-3xl z-[1]" />
@@ -462,7 +451,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         color="#6B8467"
       />
 
-      {/* Top Header Bar: Skip Button & Grand Title */}
+      {/* Top Header Bar: Skip Button & Nuptials Title */}
       <header className="w-full max-w-4xl flex items-center justify-between z-20 pt-1">
         <div className="text-left">
           <span className="text-[10px] sm:text-xs tracking-[0.3em] uppercase text-rust/80 font-semibold block">
@@ -484,7 +473,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       </header>
 
       {/* =========================================================================
-          MIDDLE SECTION: SCRIPT HEADING + 3D INTERACTIVE TILT ENVELOPE
+          MIDDLE SECTION: SCRIPT HEADING + 3D PARALLAX TILT ENVELOPE
           ========================================================================= */}
       <div className="w-full flex flex-col items-center justify-center my-auto z-10 perspective-1000">
         {/* Top Script Greeting */}
@@ -516,22 +505,24 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
           onMouseMove={handleEnvelopeMouseMove}
           onMouseLeave={handleEnvelopeMouseLeave}
           style={{
-            transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-            transition: isOpening ? 'none' : 'transform 0.15s ease-out',
+            transform: isOpening ? 'none' : `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+            transition: isOpening ? 'transform 0.4s ease-out' : 'transform 0.15s ease-out',
           }}
-          className="relative w-[95vw] max-w-[480px] aspect-[1.46/1] z-20 my-1 overflow-visible preserve-3d"
+          className="relative w-[92vw] max-w-[480px] aspect-[1.46/1] z-20 my-1 overflow-visible preserve-3d"
         >
           <div className="relative w-full h-full select-none">
-            {/* Specular Diagonal Light Reflection when tilting */}
-            <div
-              style={{
-                transform: `translate(${tilt.y * 14}px, ${tilt.x * 12}px)`,
-                opacity: Math.abs(tilt.x) + Math.abs(tilt.y) > 0 ? 0.45 : 0,
-              }}
-              className="pointer-events-none absolute inset-0 z-50 rounded-2xl bg-gradient-to-tr from-transparent via-white/20 to-transparent transition-opacity duration-300"
-            />
+            {/* Specular Light Sheen when tilting */}
+            {!isOpening && (
+              <div
+                style={{
+                  transform: `translate(${tilt.y * 12}px, ${tilt.x * 10}px)`,
+                  opacity: Math.abs(tilt.x) + Math.abs(tilt.y) > 0 ? 0.35 : 0,
+                }}
+                className="pointer-events-none absolute inset-0 z-50 rounded-2xl bg-gradient-to-tr from-transparent via-white/20 to-transparent transition-opacity duration-300"
+              />
+            )}
 
-            {/* LAYER 0 (z-0): ENVELOPE BACK JACKET & LUXURY BOTANICAL INNER LINER */}
+            {/* LAYER 0 (z-0): ENVELOPE BACK JACKET & BOTANICAL INNER LINER */}
             <div
               className={`absolute inset-0 z-0 rounded-2xl shadow-envelope border overflow-hidden transition-colors ${
                 isStationery
@@ -547,7 +538,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 >
                   <defs>
                     <pattern
-                      id="botanicalLinerPatternInteractive"
+                      id="botanicalLinerPatternClean"
                       x="0"
                       y="0"
                       width="60"
@@ -575,7 +566,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       <circle cx="52" cy="48" r="1.8" fill="#C8A97E" fillOpacity="0.5" />
                     </pattern>
                   </defs>
-                  <rect width="100%" height="100%" fill="url(#botanicalLinerPatternInteractive)" />
+                  <rect width="100%" height="100%" fill="url(#botanicalLinerPatternClean)" />
                 </svg>
 
                 <div
@@ -586,7 +577,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                   }`}
                 />
 
-                {/* Stamped Gold Foil Monogram Emblem on the Back Interior Pocket */}
+                {/* Stamped Gold Monogram Emblem on Back Pocket */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-champagne flex flex-col items-center justify-center">
                     <span className="font-serif text-2xl sm:text-3xl font-semibold tracking-widest text-espresso">
@@ -652,14 +643,14 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
 
             {/* =========================================================================
                 LAYER 2 (z-10 during rise, z-35 when presented):
-                PHYSICALLY DRAGGABLE & 3D FLIPPABLE LUXURY INVITATION CARD
+                DRAGGABLE & 3D FLIPPABLE LUXURY INVITATION CARD
                 ========================================================================= */}
             <motion.div
               drag={stage === 'card-peeking' ? 'y' : false}
-              dragConstraints={{ top: -115, bottom: 0 }}
-              dragElastic={0.15}
+              dragConstraints={{ top: -110, bottom: 0 }}
+              dragElastic={0.12}
               onDragEnd={(_e, info) => {
-                if (info.offset.y < -35 || info.velocity.y < -100) {
+                if (info.offset.y < -30 || info.velocity.y < -80) {
                   handleRevealCard();
                 }
               }}
@@ -668,20 +659,20 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 stage === 'card-peeking'
                   ? { y: -38, scale: 0.96 }
                   : stage === 'card-presented' || stage === 'transitioning'
-                  ? { y: -115, scale: 1.02 }
+                  ? { y: -110, scale: 1.01 }
                   : { y: 16, scale: 0.94 }
               }
               transition={{
-                duration: stage === 'card-peeking' ? 0.45 : 0.85,
+                duration: stage === 'card-peeking' ? 0.45 : 0.8,
                 ease: [0.22, 1, 0.36, 1],
               }}
               style={{
                 zIndex:
                   stage === 'card-presented' || stage === 'transitioning' ? 35 : 10,
               }}
-              className={`absolute inset-x-2.5 sm:inset-x-5 top-2.5 bottom-2.5 rounded-xl bg-transparent transition-shadow ${
+              className={`absolute inset-x-2 sm:inset-x-4 top-2 bottom-2 rounded-xl bg-transparent ${
                 stage === 'card-peeking'
-                  ? 'cursor-grab active:cursor-grabbing hover:shadow-[0_15px_30px_rgba(0,0,0,0.18)]'
+                  ? 'cursor-grab active:cursor-grabbing'
                   : stage === 'card-presented'
                   ? 'shadow-2xl'
                   : ''
@@ -691,11 +682,11 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               <AnimatePresence>
                 {stage === 'card-peeking' && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={handleRevealCard}
-                    className="absolute -top-10 inset-x-0 flex items-center justify-center cursor-pointer z-40"
+                    className="absolute -top-10 inset-x-0 flex items-center justify-center cursor-pointer z-50"
                   >
                     <div className="bg-espresso/90 text-alabaster text-[9px] sm:text-[10px] font-sans font-semibold tracking-[0.2em] uppercase px-3 py-1 rounded-full shadow-lg border border-champagne flex items-center gap-1.5 animate-bounce">
                       <ChevronUp className="w-3.5 h-3.5 text-champagne" />
@@ -708,19 +699,26 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               {/* 3D FLIPPABLE CONTAINER */}
               <motion.div
                 animate={{ rotateY: isCardFlipped ? 180 : 0 }}
-                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                style={{ transformStyle: 'preserve-3d' }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  transformStyle: 'preserve-3d',
+                  WebkitTransformStyle: 'preserve-3d',
+                }}
                 className="relative w-full h-full rounded-xl"
               >
                 {/* =================================================================
                     FRONT FACE: FORMAL INVITATION WITH CAMEO & DETAILS
                     ================================================================= */}
                 <div
-                  style={{ backfaceVisibility: 'hidden' }}
-                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-3 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    pointerEvents: isCardFlipped ? 'none' : 'auto',
+                  }}
+                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
                 >
-                  {/* Gold Corner Brackets & Border */}
-                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2.5 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4]">
+                  {/* Gold Corner Brackets & Inner Border */}
+                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4]">
                     <div className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-champagne/80" />
                     <div className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-champagne/80" />
                     <div className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-champagne/80" />
@@ -735,13 +733,13 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                         </span>
                         <span className="h-[1px] w-5 bg-champagne/50" />
                       </div>
-                      <h2 className="font-serif text-lg sm:text-2xl font-semibold tracking-wide text-espresso uppercase leading-snug">
+                      <h2 className="font-serif text-base sm:text-2xl font-semibold tracking-wide text-espresso uppercase leading-snug">
                         {couple.displayTitle}
                       </h2>
                     </div>
 
                     {/* Card Middle: Couple Cameo Photo */}
-                    <div className="my-0.5 flex items-center justify-center gap-3">
+                    <div className="my-0.5 flex items-center justify-center gap-2.5">
                       <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0">
                         <img
                           src="/photos/grace-cydrill.jpg"
@@ -806,17 +804,20 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 <div
                   style={{
                     backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
+                    WebkitTransform: 'rotateY(180deg)',
+                    pointerEvents: isCardFlipped ? 'auto' : 'none',
                   }}
-                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-3 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
                 >
-                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2.5 sm:p-3 relative">
+                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative">
                     {/* Back Header */}
                     <div className="w-full">
                       <span className="text-[8px] sm:text-[9.5px] uppercase tracking-[0.3em] text-terracotta font-semibold block mb-0.5">
                         A Note From The Couple
                       </span>
-                      <h3 className="font-serif text-base sm:text-xl font-bold text-espresso">
+                      <h3 className="font-serif text-sm sm:text-xl font-bold text-espresso">
                         With Grateful Hearts
                       </h3>
                     </div>
@@ -826,13 +827,13 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       <p className="font-editorial text-[10px] sm:text-xs text-espresso/80 italic leading-relaxed">
                         “We prayed for each other long before our paths crossed. Now, as God unites our hearts forever, your prayers and presence will complete our joy.”
                       </p>
-                      <p className="text-[9px] sm:text-[10.5px] font-script text-rust font-semibold mt-1">
+                      <p className="text-[9px] sm:text-[10.5px] font-script text-rust font-semibold mt-0.5">
                         — Cydrill & Mary Grace
                       </p>
                     </div>
 
                     {/* Interactive Action Shortcuts on the Card */}
-                    <div className="w-full flex flex-col gap-1.5 pt-1">
+                    <div className="w-full flex flex-col gap-1.5 pt-0.5">
                       <div className="flex items-center justify-center gap-2">
                         {/* Google Calendar Link */}
                         <a
@@ -937,10 +938,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 />
               </svg>
 
-              {/* =====================================================================
-                  INTERACTIVE POSTAGE STAMP (Top Right of Jacket)
-                  Tap to stamp ink cancellation with sound & celebration!
-                  ===================================================================== */}
+              {/* INTERACTIVE POSTAGE STAMP (Top Right of Jacket) */}
               <motion.div
                 animate={
                   isOpening
@@ -979,9 +977,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 </div>
               </motion.div>
 
-              {/* =====================================================================
-                  PERSONALIZED CALLIGRAPHY RECIPIENT & EDIT BADGE
-                  ===================================================================== */}
+              {/* PERSONALIZED CALLIGRAPHY RECIPIENT */}
               <motion.div
                 animate={
                   isOpening
@@ -996,11 +992,12 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     {recipientName ? 'SPECIALLY PREPARED FOR' : 'CORDIALLY INVITED'}
                   </span>
 
-                  {/* Interactive "Personalize" edit pencil */}
+                  {/* Edit Pencil (stops propagation so envelope doesn't open accidentally) */}
                   {!isOpening && (
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setEditInputValue(recipientName);
                         setIsEditingRecipient(true);
                       }}
@@ -1013,7 +1010,8 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 </div>
 
                 <p
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (!isOpening) {
                       setEditInputValue(recipientName);
                       setIsEditingRecipient(true);
@@ -1030,7 +1028,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     {recipientName ? 'WITH JOY & GRATITUDE' : 'TO CELEBRATE OUR WEDDING'}
                   </span>
 
-                  {/* Share Link Button if personalized */}
+                  {/* Share Link Button */}
                   {recipientName && !isOpening && (
                     <button
                       type="button"
@@ -1062,11 +1060,14 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             </div>
 
             {/* =========================================================================
-                LAYER 4 (z-40): 3D WAX SEAL WITH "PRESS & HOLD / TAP" PROGRESS CHARGE
+                LAYER 4 (z-40): WAX SEAL WITH TAP & PRESS-AND-HOLD CHARGE
+                pointer-events-none when opening so it NEVER blocks clicks on the rising card!
                 ========================================================================= */}
             <div
               style={{ zIndex: 40 }}
-              className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2"
+              className={`absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 ${
+                isOpening ? 'pointer-events-none' : ''
+              }`}
             >
               <div className="relative flex flex-col items-center" ref={sealRef}>
                 {/* Floating Hint Pill */}
@@ -1074,38 +1075,58 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                   {stage === 'idle' && (
                     <motion.div
                       initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        scale: showHoldHint ? [1, 1.08, 1] : 1,
+                      }}
                       exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute -top-10 sm:-top-11 whitespace-nowrap bg-espresso/90 text-alabaster text-[9px] sm:text-[10.5px] font-sans font-medium tracking-[0.16em] uppercase px-3 py-1 rounded-full shadow-lg border border-champagne/50 pointer-events-none flex items-center gap-1.5"
+                      transition={{ duration: 0.25 }}
+                      className={`absolute -top-10 sm:-top-11 whitespace-nowrap text-alabaster text-[9px] sm:text-[10.5px] font-sans font-medium tracking-[0.16em] uppercase px-3.5 py-1.5 rounded-full shadow-lg border pointer-events-none flex items-center gap-1.5 transition-all ${
+                        showHoldHint
+                          ? 'bg-rust border-champagne text-sand-light shadow-xl'
+                          : 'bg-espresso/90 border-champagne/60'
+                      }`}
                     >
                       <Sparkles className="w-3 h-3 text-champagne animate-spin" style={{ animationDuration: '6s' }} />
-                      <span>{holdProgress > 0 ? `Melting... ${holdProgress}%` : 'Tap or Hold to Break Seal'}</span>
+                      <span>
+                        {holdProgress > 0
+                          ? holdProgress >= 50
+                            ? `Breaking... ${holdProgress}%`
+                            : `Melting... ${holdProgress}%`
+                          : showHoldHint
+                          ? 'Keep holding to break seal!'
+                          : 'Tap & hold to break seal'}
+                      </span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Wax Seal Button with Press-and-Hold Charge */}
+                {/* Wax Seal Button */}
                 <motion.div
                   role="button"
                   tabIndex={0}
                   onPointerDown={handleSealPointerDown}
                   onPointerUp={handleSealPointerUp}
-                  onPointerCancel={handleSealPointerUp}
-                  aria-label="Break wax seal and open wedding invitation"
+                  onPointerCancel={handleSealPointerCancel}
+                  aria-label="Tap and hold wax seal to open wedding invitation"
                   animate={
                     isOpening
                       ? { scale: [1, 1.25, 0.4], opacity: [1, 1, 0], rotate: 12 }
-                      : { scale: holdProgress > 0 ? 1 + holdProgress * 0.0015 : [1, 1.04, 1] }
+                      : showHoldHint
+                      ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.05, 1] }
+                      : { scale: holdProgress > 0 ? 1 + holdProgress * 0.0016 : [1, 1.04, 1] }
                   }
                   transition={
                     isOpening
                       ? { duration: 0.38, ease: 'easeOut' }
+                      : showHoldHint
+                      ? { duration: 0.35, ease: 'easeInOut' }
                       : { duration: 2.8, repeat: holdProgress > 0 ? 0 : Infinity, ease: 'easeInOut' }
                   }
                   className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform"
                 >
-                  {/* Circular Golden SVG Charge Ring when user presses & holds */}
+                  {/* Golden Charge Ring when pressing & holding */}
                   {holdProgress > 0 && (
                     <svg className="absolute -inset-2 w-24 h-24 sm:w-28 sm:h-28 -rotate-90 pointer-events-none">
                       <circle
@@ -1129,13 +1150,13 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     className="absolute inset-0 w-full h-full drop-shadow-wax"
                   >
                     <defs>
-                      <radialGradient id="luxWaxGradInteractive" cx="35%" cy="30%" r="70%">
+                      <radialGradient id="luxWaxGradPolished" cx="35%" cy="30%" r="70%">
                         <stop offset="0%" stopColor="#F7D4D7" />
                         <stop offset="30%" stopColor="#E2A6AB" />
                         <stop offset="70%" stopColor="#BD6D74" />
                         <stop offset="100%" stopColor="#8C4249" />
                       </radialGradient>
-                      <linearGradient id="goldRimGradInteractive" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <linearGradient id="goldRimGradPolished" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#FFF2D6" />
                         <stop offset="50%" stopColor="#C8A97E" />
                         <stop offset="100%" stopColor="#8F7249" />
@@ -1144,7 +1165,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
 
                     <path
                       d="M 60,3 C 76,2 92,8 101,18 C 111,28 118,44 117,59 C 116,75 110,91 99,102 C 88,113 72,118 57,117 C 41,116 26,110 16,98 C 6,86 1,70 2,55 C 3,39 10,24 22,14 C 34,4 47,4 60,3 Z"
-                      fill="url(#luxWaxGradInteractive)"
+                      fill="url(#luxWaxGradPolished)"
                       stroke="#FAF0F1"
                       strokeOpacity="0.65"
                       strokeWidth="1.8"
@@ -1155,7 +1176,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       cy="60"
                       r="43"
                       fill="none"
-                      stroke="url(#goldRimGradInteractive)"
+                      stroke="url(#goldRimGradPolished)"
                       strokeWidth="1.4"
                       strokeDasharray="2,3"
                       strokeOpacity="0.85"
@@ -1181,7 +1202,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       </div>
 
       {/* =========================================================================
-          BOTTOM CONTROLS & INTERACTIVE AUDIO TOGGLE
+          BOTTOM CONTROLS & AUDIO TOGGLE
           ========================================================================= */}
       <motion.footer
         initial={{ opacity: 0, y: 15 }}
@@ -1192,13 +1213,10 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         {/* Interactive Prompt or Drag Instruction */}
         {stage === 'idle' ? (
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleOpen}
-              className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-espresso hover:text-terracotta transition-colors flex items-center gap-1.5 group"
-            >
+            <p className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-espresso flex items-center gap-1.5">
               <span>{couple.envelopePrompt}</span>
-              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
-            </button>
+              <Sparkles className="w-3.5 h-3.5 text-terracotta animate-pulse" />
+            </p>
           </div>
         ) : stage === 'card-peeking' ? (
           <button
