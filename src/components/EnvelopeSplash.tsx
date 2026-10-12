@@ -1,0 +1,1308 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Sparkles,
+  Volume2,
+  VolumeX,
+  ArrowRight,
+  Heart,
+  CalendarPlus,
+  Copy,
+  Check,
+  RotateCw,
+  Edit3,
+  X,
+  Share2,
+  ChevronUp,
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { weddingConfig } from '../config/weddingConfig';
+import { soundManager } from '../utils/sound';
+import { getGoogleCalendarUrl, openGoogleCalendarApp } from '../utils/calendar';
+import { BotanicalSprig, BohoSunDivider } from './Dividers';
+
+interface EnvelopeSplashProps {
+  onOpenComplete: (startAudio: boolean) => void;
+  onStartAudio?: () => void;
+  variant?: 'boho' | 'stationery';
+}
+
+type OpenStage =
+  | 'idle'
+  | 'unsealing'
+  | 'flap-open'
+  | 'card-peeking'
+  | 'card-presented'
+  | 'transitioning';
+
+interface SparkleTrail {
+  id: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * Extracts optional personalized recipient name from URL
+ */
+function getGuestRecipient(): string | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const raw =
+    params.get('to') ||
+    params.get('guest') ||
+    params.get('for') ||
+    params.get('name') ||
+    params.get('recipient') ||
+    '';
+  const decoded = decodeURIComponent(raw.replace(/\+/g, ' ')).trim();
+  return decoded.length > 0 ? decoded : null;
+}
+
+/**
+ * Romantic ambient floating particles: blush petals, sage leaves & gold dust
+ */
+const FloatingPetals: React.FC = () => {
+  const petals = useMemo(
+    () => [
+      { id: 1, left: '6%', delay: 0, duration: 9.5, size: 14, type: 'petal' },
+      { id: 2, left: '16%', delay: 3.2, duration: 11.2, size: 18, type: 'leaf' },
+      { id: 3, left: '26%', delay: 1.5, duration: 8.8, size: 8, type: 'sparkle' },
+      { id: 4, left: '38%', delay: 5.1, duration: 10.4, size: 16, type: 'petal' },
+      { id: 5, left: '49%', delay: 2.1, duration: 12.0, size: 12, type: 'leaf' },
+      { id: 6, left: '59%', delay: 4.4, duration: 9.1, size: 9, type: 'sparkle' },
+      { id: 7, left: '71%', delay: 0.8, duration: 10.8, size: 17, type: 'petal' },
+      { id: 8, left: '83%', delay: 3.9, duration: 11.5, size: 13, type: 'leaf' },
+      { id: 9, left: '92%', delay: 1.9, duration: 8.5, size: 8, type: 'sparkle' },
+      { id: 10, left: '12%', delay: 6.2, duration: 10.0, size: 15, type: 'petal' },
+      { id: 11, left: '78%', delay: 5.7, duration: 9.7, size: 16, type: 'petal' },
+    ],
+    []
+  );
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-[2]">
+      {petals.map((p) => (
+        <div
+          key={p.id}
+          className="absolute -top-6 pointer-events-none select-none opacity-0"
+          style={{
+            left: p.left,
+            animation: `floatPetal ${p.duration}s linear infinite`,
+            animationDelay: `${p.delay}s`,
+          }}
+        >
+          {p.type === 'petal' ? (
+            <svg
+              width={p.size}
+              height={p.size * 1.3}
+              viewBox="0 0 24 32"
+              fill="none"
+              className="rotate-12"
+            >
+              <path
+                d="M12 0 C22 10, 24 24, 12 32 C0 24, 2 10, 12 0 Z"
+                fill="#E8C5C8"
+                fillOpacity="0.55"
+              />
+            </svg>
+          ) : p.type === 'leaf' ? (
+            <svg
+              width={p.size}
+              height={p.size * 1.2}
+              viewBox="0 0 20 28"
+              fill="none"
+              className="-rotate-45"
+            >
+              <path
+                d="M10 0 C18 8, 18 20, 10 28 C2 20, 2 8, 10 0 Z"
+                fill="#6B8467"
+                fillOpacity="0.45"
+              />
+            </svg>
+          ) : (
+            <div
+              style={{ width: p.size, height: p.size }}
+              className="rounded-full bg-champagne/60 shadow-[0_0_8px_rgba(200,169,126,0.8)]"
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
+  onOpenComplete,
+  onStartAudio,
+  variant = 'boho',
+}) => {
+  const [stage, setStage] = useState<OpenStage>('idle');
+  const [withMusic, setWithMusic] = useState(true);
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [copiedHashtag, setCopiedHashtag] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // 3D Parallax tilt coordinates
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  // Interactive Wax Seal Press-and-Hold Charge Progress (0 to 100)
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdIntervalRef = useRef<number | null>(null);
+
+  // Stamp click count and animation
+  const [stampClicks, setStampClicks] = useState(1);
+  const [stampSquash, setStampSquash] = useState(false);
+
+  // Recipient Personalization
+  const initialGuest = useMemo(() => getGuestRecipient(), []);
+  const [recipientName, setRecipientName] = useState<string>(initialGuest || '');
+  const [isEditingRecipient, setIsEditingRecipient] = useState(false);
+  const [editInputValue, setEditInputValue] = useState(initialGuest || '');
+
+  // Magic Sparkle Cursor Trail
+  const [sparkleTrail, setSparkleTrail] = useState<SparkleTrail[]>([]);
+
+  const sealRef = useRef<HTMLDivElement | null>(null);
+  const autoProceedTimerRef = useRef<number | null>(null);
+
+  const { couple, schedule, location, music } = weddingConfig;
+  const isStationery = variant === 'stationery';
+  const isOpening = stage !== 'idle';
+  const isFlapBehindCard =
+    stage === 'flap-open' ||
+    stage === 'card-peeking' ||
+    stage === 'card-presented' ||
+    stage === 'transitioning';
+
+  // Clear timers on unmount
+  useEffect(() => {
+    return () => {
+      if (holdIntervalRef.current !== null) {
+        clearInterval(holdIntervalRef.current);
+      }
+      if (autoProceedTimerRef.current !== null) {
+        window.clearTimeout(autoProceedTimerRef.current);
+      }
+    };
+  }, []);
+
+  // 3D Tilt calculation on mouse move
+  const handleEnvelopeMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isOpening) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setTilt({
+      x: -(y * 12),
+      y: x * 14,
+    });
+  };
+
+  const handleEnvelopeMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
+  // Sparkle cursor trail
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (Math.random() > 0.4) {
+      const point: SparkleTrail = {
+        id: Date.now() + Math.random(),
+        x: e.clientX,
+        y: e.clientY,
+      };
+      setSparkleTrail((prev) => [...prev.slice(-10), point]);
+    }
+  };
+
+  // Remove sparkles over time
+  useEffect(() => {
+    if (sparkleTrail.length === 0) return;
+    const timer = setTimeout(() => {
+      setSparkleTrail((prev) => prev.slice(1));
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [sparkleTrail]);
+
+  // Celebratory confetti burst originating from the wax seal
+  const fireConfetti = () => {
+    try {
+      let x = 0.5;
+      let y = 0.55;
+
+      if (sealRef.current) {
+        const rect = sealRef.current.getBoundingClientRect();
+        x = (rect.left + rect.width / 2) / window.innerWidth;
+        y = (rect.top + rect.height / 2) / window.innerHeight;
+      }
+
+      confetti({
+        particleCount: 55,
+        spread: 68,
+        origin: { x, y },
+        colors: ['#E8C5C8', '#D49499', '#C8A97E', '#6B8467', '#FAFBF9'],
+        ticks: 220,
+        gravity: 0.85,
+        scalar: 1.05,
+      });
+
+      setTimeout(() => {
+        confetti({
+          particleCount: 32,
+          spread: 90,
+          origin: { x, y: Math.max(0.1, y - 0.04) },
+          colors: ['#FAFBF9', '#C8A97E', '#E8C5C8', '#B8C7B4'],
+          ticks: 180,
+          gravity: 0.9,
+          scalar: 0.85,
+        });
+      }, 150);
+    } catch {
+      // Confetti fallback
+    }
+  };
+
+  // Action: Open Envelope Sequence
+  const handleOpen = () => {
+    if (isOpening) return;
+
+    if (withMusic && onStartAudio) {
+      onStartAudio();
+    }
+
+    fireConfetti();
+    setStage('unsealing');
+
+    // Stage 2: Flap folds backward
+    setTimeout(() => {
+      setStage('flap-open');
+    }, 320);
+
+    // Stage 3: Card emerges slightly and invites the user to pull/drag it out
+    setTimeout(() => {
+      setStage('card-peeking');
+    }, 600);
+  };
+
+  // Action: User pulls or clicks to fully reveal the card
+  const handleRevealCard = () => {
+    if (stage === 'card-presented' || stage === 'transitioning') return;
+
+    soundManager.playCardSlideSound();
+    setStage('card-presented');
+
+    // Soft celebration mini-burst
+    confetti({
+      particleCount: 25,
+      spread: 50,
+      origin: { y: 0.4 },
+      colors: ['#C8A97E', '#FAFBF9', '#D49499'],
+      scalar: 0.8,
+    });
+  };
+
+  // Action: Proceed smoothly into main wedding website
+  const handleProceed = () => {
+    if (stage === 'transitioning') return;
+    if (autoProceedTimerRef.current !== null) {
+      window.clearTimeout(autoProceedTimerRef.current);
+    }
+    setStage('transitioning');
+    setTimeout(() => {
+      onOpenComplete(withMusic);
+    }, 550);
+  };
+
+  const handleDirectSkip = () => {
+    if (withMusic && onStartAudio) {
+      onStartAudio();
+    }
+    handleProceed();
+  };
+
+  // Action: Interactive Wax Seal Press-and-Hold
+  const handleSealPointerDown = () => {
+    if (isOpening) return;
+    const startTime = Date.now();
+    const duration = 500; // 500ms to break
+    holdIntervalRef.current = window.setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, Math.floor((elapsed / duration) * 100));
+      setHoldProgress(progress);
+      if (progress >= 100) {
+        if (holdIntervalRef.current !== null) {
+          clearInterval(holdIntervalRef.current);
+          holdIntervalRef.current = null;
+        }
+        setHoldProgress(0);
+        handleOpen();
+      }
+    }, 25);
+  };
+
+  const handleSealPointerUp = () => {
+    if (holdIntervalRef.current !== null) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    // If it was a short tap (< 500ms), still open smoothly!
+    if (!isOpening && holdProgress < 100) {
+      setHoldProgress(0);
+      handleOpen();
+    } else {
+      setHoldProgress(0);
+    }
+  };
+
+  // Action: Interactive Postage Stamp Tap
+  const handleStampClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    soundManager.playStampSound();
+    setStampSquash(true);
+    setStampClicks((prev) => prev + 1);
+
+    confetti({
+      particleCount: 16,
+      spread: 45,
+      origin: { x: 0.72, y: 0.38 },
+      colors: ['#D49499', '#E8C5C8', '#C8A97E'],
+      scalar: 0.8,
+    });
+
+    setTimeout(() => setStampSquash(false), 220);
+  };
+
+  // Action: Flip 3D Invitation Card
+  const handleFlipCard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    soundManager.playFlipSound();
+    setIsCardFlipped((prev) => !prev);
+  };
+
+  // Action: Copy Hashtag
+  const handleCopyHashtag = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(couple.hashtag);
+    setCopiedHashtag(true);
+    confetti({
+      particleCount: 22,
+      spread: 50,
+      origin: { y: 0.6 },
+      colors: ['#6B8467', '#D49499', '#C8A97E'],
+    });
+    setTimeout(() => setCopiedHashtag(false), 2400);
+  };
+
+  // Action: Save Personalized Name
+  const handleSaveRecipient = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = editInputValue.trim();
+    setRecipientName(trimmed);
+    setIsEditingRecipient(false);
+
+    confetti({
+      particleCount: 20,
+      spread: 45,
+      origin: { x: 0.45, y: 0.5 },
+      colors: ['#E8C5C8', '#C8A97E'],
+    });
+  };
+
+  // Action: Copy Personalized Share Link
+  const handleCopyShareLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = new URL(window.location.href);
+    if (recipientName.trim()) {
+      url.searchParams.set('to', recipientName.trim());
+    }
+    navigator.clipboard.writeText(url.toString());
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2200);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.02 }}
+      transition={{ duration: 0.65, ease: 'easeInOut' }}
+      onPointerMove={handlePointerMove}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden paper-grain px-3 py-3 sm:px-6 sm:py-5 select-none ${
+        isStationery
+          ? 'bg-gradient-to-br from-[#FAFBF9] via-[#F2F5F0] to-[#E2EAE0]'
+          : 'bg-gradient-to-br from-[#F5F8F4] via-[#EAF0E8] to-[#DCE5D8]'
+      }`}
+    >
+      {/* Ambient Floating Rose Petals & Gold Dust Particles */}
+      <FloatingPetals />
+
+      {/* Magic Sparkle Cursor Trail */}
+      <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
+        {sparkleTrail.map((pt) => (
+          <div
+            key={pt.id}
+            style={{ left: pt.x, top: pt.y }}
+            className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-500 opacity-90 scale-100"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-champagne drop-shadow-[0_0_6px_rgba(200,169,126,0.9)] animate-ping" />
+          </div>
+        ))}
+      </div>
+
+      {/* Ambient Sage & Blush Glow Orbs */}
+      <div className="pointer-events-none absolute top-10 left-10 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-blush/25 blur-3xl z-[1]" />
+      <div className="pointer-events-none absolute bottom-10 right-10 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-terracotta/15 blur-3xl z-[1]" />
+
+      {/* Corner Botanicals */}
+      <BotanicalSprig
+        className="fixed -top-12 -left-12 w-40 h-40 sm:w-72 sm:h-72 rotate-90 opacity-35 sm:opacity-55 pointer-events-none z-[2]"
+        color={isStationery ? '#6B8467' : '#465943'}
+      />
+      <BotanicalSprig
+        className="fixed -bottom-14 -right-12 w-44 h-44 sm:w-80 sm:h-80 -rotate-90 opacity-35 sm:opacity-55 pointer-events-none z-[2]"
+        color="#6B8467"
+      />
+
+      {/* Top Header Bar: Skip Button & Grand Title */}
+      <header className="w-full max-w-4xl flex items-center justify-between z-20 pt-1">
+        <div className="text-left">
+          <span className="text-[10px] sm:text-xs tracking-[0.3em] uppercase text-rust/80 font-semibold block">
+            {couple.nuptialTitle}
+          </span>
+          <span className="text-[9px] sm:text-[11px] tracking-[0.2em] uppercase text-espresso/60">
+            {schedule.dateFormatted} • {location.addressLine2}
+          </span>
+        </div>
+
+        <button
+          onClick={handleDirectSkip}
+          className="text-[10px] sm:text-xs uppercase tracking-[0.2em] font-medium text-espresso/70 hover:text-espresso bg-alabaster/80 hover:bg-alabaster px-3 py-1.5 rounded-full border border-terracotta/20 shadow-sm transition-all flex items-center gap-1.5"
+          aria-label="Skip splash screen to view wedding details"
+        >
+          <span>Skip to Website</span>
+          <ArrowRight className="w-3 h-3 text-terracotta" />
+        </button>
+      </header>
+
+      {/* =========================================================================
+          MIDDLE SECTION: SCRIPT HEADING + 3D INTERACTIVE TILT ENVELOPE
+          ========================================================================= */}
+      <div className="w-full flex flex-col items-center justify-center my-auto z-10 perspective-1000">
+        {/* Top Script Greeting */}
+        <motion.div
+          initial={{ opacity: 0, y: -14 }}
+          animate={
+            isOpening
+              ? { opacity: 0, y: -30, scale: 0.95 }
+              : { opacity: 1, y: 0, scale: 1 }
+          }
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          className="text-center mb-2 sm:mb-4 z-10 pointer-events-none"
+        >
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.38em] text-rust/90 font-semibold mb-0.5">
+            Formal Wedding Invitation
+          </p>
+          <h1 className="font-script text-4xl sm:text-6xl md:text-7xl text-espresso drop-shadow-sm leading-tight">
+            {couple.envelopeGreeting}
+          </h1>
+          <p className="text-[10px] sm:text-xs text-espresso/70 tracking-[0.18em] uppercase mt-0.5">
+            {couple.displayTitle}
+          </p>
+        </motion.div>
+
+        {/* =========================================================================
+            3D PARALLAX ENVELOPE CONTAINER
+            ========================================================================= */}
+        <div
+          onMouseMove={handleEnvelopeMouseMove}
+          onMouseLeave={handleEnvelopeMouseLeave}
+          style={{
+            transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+            transition: isOpening ? 'none' : 'transform 0.15s ease-out',
+          }}
+          className="relative w-[95vw] max-w-[480px] aspect-[1.46/1] z-20 my-1 overflow-visible preserve-3d"
+        >
+          <div className="relative w-full h-full select-none">
+            {/* Specular Diagonal Light Reflection when tilting */}
+            <div
+              style={{
+                transform: `translate(${tilt.y * 14}px, ${tilt.x * 12}px)`,
+                opacity: Math.abs(tilt.x) + Math.abs(tilt.y) > 0 ? 0.45 : 0,
+              }}
+              className="pointer-events-none absolute inset-0 z-50 rounded-2xl bg-gradient-to-tr from-transparent via-white/20 to-transparent transition-opacity duration-300"
+            />
+
+            {/* LAYER 0 (z-0): ENVELOPE BACK JACKET & LUXURY BOTANICAL INNER LINER */}
+            <div
+              className={`absolute inset-0 z-0 rounded-2xl shadow-envelope border overflow-hidden transition-colors ${
+                isStationery
+                  ? 'bg-[#EAEFE8] border-[#CAD5C6]'
+                  : 'bg-[#D2DDD0] border-[#BAC7B6]'
+              }`}
+            >
+              {/* Botanical Seamless Liner Pattern */}
+              <div className="absolute inset-1.5 sm:inset-2 rounded-xl overflow-hidden bg-[#FAFBF9] border border-champagne/40">
+                <svg
+                  className="absolute inset-0 w-full h-full opacity-35"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <pattern
+                      id="botanicalLinerPatternInteractive"
+                      x="0"
+                      y="0"
+                      width="60"
+                      height="60"
+                      patternUnits="userSpaceOnUse"
+                    >
+                      <path
+                        d="M10 50 C20 40, 30 25, 45 10"
+                        stroke="#6B8467"
+                        strokeWidth="1.2"
+                        fill="none"
+                      />
+                      <path
+                        d="M20 40 C14 36, 12 28, 20 26 C24 30, 24 36, 20 40 Z"
+                        fill="#6B8467"
+                        fillOpacity="0.35"
+                      />
+                      <path
+                        d="M32 28 C38 32, 44 28, 42 22 C36 22, 34 26, 32 28 Z"
+                        fill="#6B8467"
+                        fillOpacity="0.3"
+                      />
+                      <circle cx="16" cy="44" r="1.5" fill="#D49499" fillOpacity="0.6" />
+                      <circle cx="42" cy="12" r="1.5" fill="#D49499" fillOpacity="0.6" />
+                      <circle cx="52" cy="48" r="1.8" fill="#C8A97E" fillOpacity="0.5" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#botanicalLinerPatternInteractive)" />
+                </svg>
+
+                <div
+                  className={`absolute inset-0 ${
+                    isStationery
+                      ? 'bg-gradient-to-b from-[#8FA68B]/35 via-transparent to-[#52674E]/30'
+                      : 'bg-gradient-to-b from-[#6B8467]/35 via-transparent to-[#3E523B]/30'
+                  }`}
+                />
+
+                {/* Stamped Gold Foil Monogram Emblem on the Back Interior Pocket */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-champagne flex flex-col items-center justify-center">
+                    <span className="font-serif text-2xl sm:text-3xl font-semibold tracking-widest text-espresso">
+                      {couple.monogram}
+                    </span>
+                    <span className="text-[8px] uppercase tracking-[0.25em] text-terracotta mt-0.5">
+                      {schedule.shortDate}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* LAYER 1 (z-30 when closed, z-[5] when opened): TOP TRIANGULAR ENVELOPE FLAP */}
+            <motion.div
+              initial={{ scaleY: 1 }}
+              animate={{
+                scaleY:
+                  stage === 'idle'
+                    ? 1
+                    : stage === 'unsealing'
+                    ? 0.05
+                    : -1,
+              }}
+              transition={{
+                duration: stage === 'unsealing' ? 0.3 : 0.36,
+                ease: stage === 'unsealing' ? 'easeIn' : 'easeOut',
+              }}
+              style={{
+                transformOrigin: 'top center',
+                zIndex: isFlapBehindCard ? 5 : 30,
+              }}
+              className="absolute inset-x-0 top-0 h-[58%] pointer-events-none"
+            >
+              <svg
+                viewBox="0 0 540 216"
+                className="w-full h-full overflow-visible drop-shadow-[0_4px_8px_rgba(34,43,35,0.14)]"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M 0,10 Q 0,0 10,0 L 530,0 Q 540,0 540,10 L 284,204 Q 270,214 256,204 Z"
+                  fill={
+                    isFlapBehindCard
+                      ? isStationery
+                        ? '#FAFBF9'
+                        : '#F5F8F4'
+                      : isStationery
+                      ? '#F5F8F4'
+                      : '#E3EBE0'
+                  }
+                  stroke={isStationery ? '#CAD5C6' : '#BAC7B6'}
+                  strokeWidth="2"
+                />
+                <path
+                  d="M 18,8 L 262,192 Q 270,198 278,192 L 522,8"
+                  fill="none"
+                  stroke={isFlapBehindCard ? '#C8A97E' : '#D49499'}
+                  strokeOpacity={isFlapBehindCard ? '0.7' : '0.55'}
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </motion.div>
+
+            {/* =========================================================================
+                LAYER 2 (z-10 during rise, z-35 when presented):
+                PHYSICALLY DRAGGABLE & 3D FLIPPABLE LUXURY INVITATION CARD
+                ========================================================================= */}
+            <motion.div
+              drag={stage === 'card-peeking' ? 'y' : false}
+              dragConstraints={{ top: -115, bottom: 0 }}
+              dragElastic={0.15}
+              onDragEnd={(_e, info) => {
+                if (info.offset.y < -35 || info.velocity.y < -100) {
+                  handleRevealCard();
+                }
+              }}
+              initial={{ y: 16, scale: 0.94 }}
+              animate={
+                stage === 'card-peeking'
+                  ? { y: -38, scale: 0.96 }
+                  : stage === 'card-presented' || stage === 'transitioning'
+                  ? { y: -115, scale: 1.02 }
+                  : { y: 16, scale: 0.94 }
+              }
+              transition={{
+                duration: stage === 'card-peeking' ? 0.45 : 0.85,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              style={{
+                zIndex:
+                  stage === 'card-presented' || stage === 'transitioning' ? 35 : 10,
+              }}
+              className={`absolute inset-x-2.5 sm:inset-x-5 top-2.5 bottom-2.5 rounded-xl bg-transparent transition-shadow ${
+                stage === 'card-peeking'
+                  ? 'cursor-grab active:cursor-grabbing hover:shadow-[0_15px_30px_rgba(0,0,0,0.18)]'
+                  : stage === 'card-presented'
+                  ? 'shadow-2xl'
+                  : ''
+              }`}
+            >
+              {/* Pulsing Drag-Up Tab Hint when card is peeking */}
+              <AnimatePresence>
+                {stage === 'card-peeking' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    onClick={handleRevealCard}
+                    className="absolute -top-10 inset-x-0 flex items-center justify-center cursor-pointer z-40"
+                  >
+                    <div className="bg-espresso/90 text-alabaster text-[9px] sm:text-[10px] font-sans font-semibold tracking-[0.2em] uppercase px-3 py-1 rounded-full shadow-lg border border-champagne flex items-center gap-1.5 animate-bounce">
+                      <ChevronUp className="w-3.5 h-3.5 text-champagne" />
+                      <span>Pull Card Up or Tap</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* 3D FLIPPABLE CONTAINER */}
+              <motion.div
+                animate={{ rotateY: isCardFlipped ? 180 : 0 }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                style={{ transformStyle: 'preserve-3d' }}
+                className="relative w-full h-full rounded-xl"
+              >
+                {/* =================================================================
+                    FRONT FACE: FORMAL INVITATION WITH CAMEO & DETAILS
+                    ================================================================= */}
+                <div
+                  style={{ backfaceVisibility: 'hidden' }}
+                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-3 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                >
+                  {/* Gold Corner Brackets & Border */}
+                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2.5 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4]">
+                    <div className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-champagne/80" />
+                    <div className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-champagne/80" />
+                    <div className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-champagne/80" />
+                    <div className="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-champagne/80" />
+
+                    {/* Card Top */}
+                    <div className="w-full">
+                      <div className="flex items-center justify-center gap-2 mb-0.5">
+                        <span className="h-[1px] w-5 bg-champagne/50" />
+                        <span className="text-[8px] sm:text-[9.5px] uppercase tracking-[0.32em] text-terracotta font-semibold">
+                          Save The Date
+                        </span>
+                        <span className="h-[1px] w-5 bg-champagne/50" />
+                      </div>
+                      <h2 className="font-serif text-lg sm:text-2xl font-semibold tracking-wide text-espresso uppercase leading-snug">
+                        {couple.displayTitle}
+                      </h2>
+                    </div>
+
+                    {/* Card Middle: Couple Cameo Photo */}
+                    <div className="my-0.5 flex items-center justify-center gap-3">
+                      <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0">
+                        <img
+                          src="/photos/grace-cydrill.jpg"
+                          alt="Cydrill and Mary Grace"
+                          className="w-full h-full object-cover object-center"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[9px] sm:text-[11px] font-semibold tracking-[0.2em] text-rust uppercase">
+                          {schedule.dayOfWeek}
+                        </p>
+                        <p className="text-[11px] sm:text-sm font-serif font-bold tracking-wider text-espresso">
+                          {schedule.dateFormatted}
+                        </p>
+                        <p className="text-[8.5px] sm:text-[10px] text-espresso/70">
+                          {schedule.timeFormatted}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Card Bottom: Venue & Interactive Controls */}
+                    <div className="w-full">
+                      <p className="text-[8.5px] sm:text-[10.5px] text-espresso/80 font-medium tracking-wide">
+                        {location.venueName} • {location.addressLine2}
+                      </p>
+
+                      <div className="mt-1.5 flex items-center justify-center gap-2">
+                        {stage === 'card-presented' && (
+                          <button
+                            type="button"
+                            onClick={handleFlipCard}
+                            className="px-2.5 py-1 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9px] sm:text-[10.5px] font-medium tracking-wider border border-terracotta/25 flex items-center gap-1 transition-all"
+                            title="Flip card to read personal note and add to calendar"
+                          >
+                            <RotateCw className="w-2.5 h-2.5 text-terracotta" />
+                            <span>Flip to Note ↺</span>
+                          </button>
+                        )}
+
+                        {(stage === 'card-presented' || stage === 'transitioning') && (
+                          <button
+                            type="button"
+                            onClick={handleProceed}
+                            className="py-1 px-3.5 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9px] sm:text-[11px] font-semibold tracking-[0.16em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
+                          >
+                            <span className="relative z-10">Step Inside</span>
+                            <ArrowRight className="w-3 h-3 relative z-10" />
+                            <div className="absolute inset-0 animate-shimmer-sweep pointer-events-none" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* =================================================================
+                    BACK FACE: PERSONAL NOTE, ADD TO CALENDAR & HASHTAG
+                    ================================================================= */}
+                <div
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                  }}
+                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-3 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                >
+                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2.5 sm:p-3 relative">
+                    {/* Back Header */}
+                    <div className="w-full">
+                      <span className="text-[8px] sm:text-[9.5px] uppercase tracking-[0.3em] text-terracotta font-semibold block mb-0.5">
+                        A Note From The Couple
+                      </span>
+                      <h3 className="font-serif text-base sm:text-xl font-bold text-espresso">
+                        With Grateful Hearts
+                      </h3>
+                    </div>
+
+                    {/* Romantic Message */}
+                    <div className="px-2 my-0.5">
+                      <p className="font-editorial text-[10px] sm:text-xs text-espresso/80 italic leading-relaxed">
+                        “We prayed for each other long before our paths crossed. Now, as God unites our hearts forever, your prayers and presence will complete our joy.”
+                      </p>
+                      <p className="text-[9px] sm:text-[10.5px] font-script text-rust font-semibold mt-1">
+                        — Cydrill & Mary Grace
+                      </p>
+                    </div>
+
+                    {/* Interactive Action Shortcuts on the Card */}
+                    <div className="w-full flex flex-col gap-1.5 pt-1">
+                      <div className="flex items-center justify-center gap-2">
+                        {/* Google Calendar Link */}
+                        <a
+                          href={getGoogleCalendarUrl()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={openGoogleCalendarApp}
+                          className="px-2.5 py-1 rounded-full bg-alabaster hover:bg-white text-espresso text-[8.5px] sm:text-[10px] font-medium border border-champagne shadow-sm flex items-center gap-1 transition-all"
+                        >
+                          <CalendarPlus className="w-3 h-3 text-terracotta" />
+                          <span>Add to Calendar</span>
+                        </a>
+
+                        {/* Copy Hashtag */}
+                        <button
+                          type="button"
+                          onClick={handleCopyHashtag}
+                          className="px-2.5 py-1 rounded-full bg-alabaster hover:bg-white text-espresso text-[8.5px] sm:text-[10px] font-medium border border-champagne shadow-sm flex items-center gap-1 transition-all"
+                        >
+                          {copiedHashtag ? (
+                            <Check className="w-3 h-3 text-green-600" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-terracotta" />
+                          )}
+                          <span>{copiedHashtag ? 'Copied!' : couple.hashtag}</span>
+                        </button>
+                      </div>
+
+                      {/* Flip Back & Enter Buttons */}
+                      <div className="flex items-center justify-center gap-2 mt-0.5">
+                        <button
+                          type="button"
+                          onClick={handleFlipCard}
+                          className="px-2 py-0.5 rounded-full text-[8.5px] sm:text-[10px] text-espresso/70 hover:text-espresso flex items-center gap-1"
+                        >
+                          <RotateCw className="w-2.5 h-2.5" />
+                          <span>Front Side ↻</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleProceed}
+                          className="py-1 px-3 rounded-full bg-terracotta text-alabaster text-[9px] sm:text-[10.5px] font-semibold tracking-wider uppercase shadow-sm hover:brightness-110 flex items-center gap-1"
+                        >
+                          <span>Enter Celebration</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* =========================================================================
+                LAYER 3 (z-20): FRONT ENVELOPE POCKET FLAPS (Left, Right, Bottom)
+                ========================================================================= */}
+            <div
+              style={{ zIndex: 20 }}
+              className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden"
+            >
+              <svg
+                viewBox="0 0 540 372"
+                className="w-full h-full drop-shadow-[0_12px_24px_rgba(34,43,35,0.18)]"
+                preserveAspectRatio="none"
+              >
+                <polygon
+                  points="0,0 270,195 0,372"
+                  fill={isStationery ? '#EDF3EB' : '#DCE5D8'}
+                  stroke={isStationery ? '#CAD5C6' : '#B8C7B4'}
+                  strokeWidth="1.4"
+                />
+                <polygon
+                  points="540,0 270,195 540,372"
+                  fill={isStationery ? '#E6EDE4' : '#D4DFD0'}
+                  stroke={isStationery ? '#CAD5C6' : '#B8C7B4'}
+                  strokeWidth="1.4"
+                />
+                <polygon
+                  points="0,372 270,174 540,372"
+                  fill={isStationery ? '#F2F6F0' : '#E4ECE1'}
+                  stroke={isStationery ? '#D5E0D1' : '#C5D2C1'}
+                  strokeWidth="1.6"
+                />
+                <line
+                  x1="0"
+                  y1="372"
+                  x2="270"
+                  y2="174"
+                  stroke="#FFFFFF"
+                  strokeOpacity="0.45"
+                  strokeWidth="1.5"
+                />
+                <line
+                  x1="270"
+                  y1="174"
+                  x2="540"
+                  y2="372"
+                  stroke="#FFFFFF"
+                  strokeOpacity="0.45"
+                  strokeWidth="1.5"
+                />
+              </svg>
+
+              {/* =====================================================================
+                  INTERACTIVE POSTAGE STAMP (Top Right of Jacket)
+                  Tap to stamp ink cancellation with sound & celebration!
+                  ===================================================================== */}
+              <motion.div
+                animate={
+                  isOpening
+                    ? { opacity: 0, scale: 0.9, y: 10 }
+                    : { opacity: 1, scale: stampSquash ? 0.92 : 1, y: 0 }
+                }
+                transition={{ duration: 0.15 }}
+                className="absolute top-3.5 right-3.5 z-20 pointer-events-auto cursor-pointer group"
+                onClick={handleStampClick}
+                title="Tap stamp to stamp postal cancellation!"
+              >
+                <div className="relative w-16 h-20 sm:w-20 sm:h-24 p-1 rounded-sm bg-[#FAFBF9] border-2 border-dashed border-[#C5D2C1] shadow-sm flex flex-col items-center justify-between text-center rotate-3 group-hover:rotate-0 transition-transform">
+                  <div className="border border-champagne/70 w-full h-full p-1 flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] to-[#F2F5F0]">
+                    <span className="text-[7px] uppercase tracking-[0.2em] text-terracotta font-bold">
+                      PHILIPPINES
+                    </span>
+                    <Heart className="w-4 h-4 text-blush-rose fill-blush/40 group-hover:scale-110 transition-transform" />
+                    <span className="font-serif text-[9.5px] sm:text-xs font-semibold text-espresso">
+                      FOREVER 2026
+                    </span>
+                  </div>
+
+                  {/* Postal Ink Cancellation Stamp Overlay */}
+                  <div className="absolute -left-3 -top-2 w-16 h-16 sm:w-18 sm:h-18 rounded-full border border-rust/50 flex flex-col items-center justify-center -rotate-12 pointer-events-none opacity-70">
+                    <span className="text-[6px] tracking-widest uppercase font-semibold text-rust">
+                      SAN FABIAN
+                    </span>
+                    <span className="text-[7px] font-mono font-bold text-rust">
+                      21 • 12 • 26
+                    </span>
+                    <div className="w-8 h-[1px] bg-rust/50 my-0.5" />
+                    <span className="text-[5.5px] tracking-wider text-rust">
+                      STAMP #{stampClicks}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* =====================================================================
+                  PERSONALIZED CALLIGRAPHY RECIPIENT & EDIT BADGE
+                  ===================================================================== */}
+              <motion.div
+                animate={
+                  isOpening
+                    ? { opacity: 0, x: -15 }
+                    : { opacity: 1, x: 0 }
+                }
+                transition={{ duration: 0.35 }}
+                className="absolute left-4 sm:left-7 top-[34%] z-20 max-w-[64%] sm:max-w-[70%] text-left pointer-events-auto"
+              >
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[7.5px] sm:text-[9px] uppercase tracking-[0.3em] text-rust/70 font-semibold block">
+                    {recipientName ? 'SPECIALLY PREPARED FOR' : 'CORDIALLY INVITED'}
+                  </span>
+
+                  {/* Interactive "Personalize" edit pencil */}
+                  {!isOpening && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditInputValue(recipientName);
+                        setIsEditingRecipient(true);
+                      }}
+                      className="p-1 rounded-full text-rust/60 hover:text-rust hover:bg-alabaster/60 transition-colors"
+                      title="Personalize recipient name on envelope"
+                    >
+                      <Edit3 className="w-2.5 h-2.5" />
+                    </button>
+                  )}
+                </div>
+
+                <p
+                  onClick={() => {
+                    if (!isOpening) {
+                      setEditInputValue(recipientName);
+                      setIsEditingRecipient(true);
+                    }
+                  }}
+                  className="font-script text-xl sm:text-3xl md:text-4xl text-espresso font-medium leading-tight drop-shadow-sm truncate cursor-pointer hover:text-terracotta transition-colors"
+                  title="Click to edit name on envelope"
+                >
+                  {recipientName || 'Our Beloved Family & Friends'}
+                </p>
+
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[7px] sm:text-[8.5px] uppercase tracking-[0.22em] text-terracotta font-medium">
+                    {recipientName ? 'WITH JOY & GRATITUDE' : 'TO CELEBRATE OUR WEDDING'}
+                  </span>
+
+                  {/* Share Link Button if personalized */}
+                  {recipientName && !isOpening && (
+                    <button
+                      type="button"
+                      onClick={handleCopyShareLink}
+                      className="text-[7px] sm:text-[8px] text-rust/70 hover:text-rust bg-alabaster/70 px-1.5 py-0.5 rounded border border-terracotta/20 flex items-center gap-0.5"
+                      title="Copy link with this name"
+                    >
+                      {copiedLink ? <Check className="w-2 h-2 text-green-600" /> : <Share2 className="w-2 h-2" />}
+                      <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Satin Ribbon Belly Band */}
+              <motion.div
+                animate={
+                  isOpening
+                    ? { opacity: 0, scaleX: 1.15 }
+                    : { opacity: 1, scaleX: 1 }
+                }
+                transition={{ duration: 0.28 }}
+                className="absolute inset-x-0 top-[52%] -translate-y-1/2 h-8 sm:h-10 z-10 pointer-events-none overflow-hidden"
+              >
+                <div className="w-full h-full bg-gradient-to-r from-blush-rose/70 via-blush/90 to-blush-rose/70 border-y border-blush-rose/50 shadow-sm flex items-center justify-between px-2">
+                  <div className="w-full h-[1px] bg-white/40" />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* =========================================================================
+                LAYER 4 (z-40): 3D WAX SEAL WITH "PRESS & HOLD / TAP" PROGRESS CHARGE
+                ========================================================================= */}
+            <div
+              style={{ zIndex: 40 }}
+              className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2"
+            >
+              <div className="relative flex flex-col items-center" ref={sealRef}>
+                {/* Floating Hint Pill */}
+                <AnimatePresence>
+                  {stage === 'idle' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute -top-10 sm:-top-11 whitespace-nowrap bg-espresso/90 text-alabaster text-[9px] sm:text-[10.5px] font-sans font-medium tracking-[0.16em] uppercase px-3 py-1 rounded-full shadow-lg border border-champagne/50 pointer-events-none flex items-center gap-1.5"
+                    >
+                      <Sparkles className="w-3 h-3 text-champagne animate-spin" style={{ animationDuration: '6s' }} />
+                      <span>{holdProgress > 0 ? `Melting... ${holdProgress}%` : 'Tap or Hold to Break Seal'}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Wax Seal Button with Press-and-Hold Charge */}
+                <motion.div
+                  role="button"
+                  tabIndex={0}
+                  onPointerDown={handleSealPointerDown}
+                  onPointerUp={handleSealPointerUp}
+                  onPointerCancel={handleSealPointerUp}
+                  aria-label="Break wax seal and open wedding invitation"
+                  animate={
+                    isOpening
+                      ? { scale: [1, 1.25, 0.4], opacity: [1, 1, 0], rotate: 12 }
+                      : { scale: holdProgress > 0 ? 1 + holdProgress * 0.0015 : [1, 1.04, 1] }
+                  }
+                  transition={
+                    isOpening
+                      ? { duration: 0.38, ease: 'easeOut' }
+                      : { duration: 2.8, repeat: holdProgress > 0 ? 0 : Infinity, ease: 'easeInOut' }
+                  }
+                  className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform"
+                >
+                  {/* Circular Golden SVG Charge Ring when user presses & holds */}
+                  {holdProgress > 0 && (
+                    <svg className="absolute -inset-2 w-24 h-24 sm:w-28 sm:h-28 -rotate-90 pointer-events-none">
+                      <circle
+                        cx="50%"
+                        cy="50%"
+                        r="45%"
+                        fill="none"
+                        stroke="#C8A97E"
+                        strokeWidth="3"
+                        strokeDasharray="280"
+                        strokeDashoffset={280 - (280 * holdProgress) / 100}
+                        strokeLinecap="round"
+                        className="drop-shadow-[0_0_8px_rgba(200,169,126,0.9)]"
+                      />
+                    </svg>
+                  )}
+
+                  {/* Organic Melted Scalloped Wax Contour SVG */}
+                  <svg
+                    viewBox="0 0 120 120"
+                    className="absolute inset-0 w-full h-full drop-shadow-wax"
+                  >
+                    <defs>
+                      <radialGradient id="luxWaxGradInteractive" cx="35%" cy="30%" r="70%">
+                        <stop offset="0%" stopColor="#F7D4D7" />
+                        <stop offset="30%" stopColor="#E2A6AB" />
+                        <stop offset="70%" stopColor="#BD6D74" />
+                        <stop offset="100%" stopColor="#8C4249" />
+                      </radialGradient>
+                      <linearGradient id="goldRimGradInteractive" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#FFF2D6" />
+                        <stop offset="50%" stopColor="#C8A97E" />
+                        <stop offset="100%" stopColor="#8F7249" />
+                      </linearGradient>
+                    </defs>
+
+                    <path
+                      d="M 60,3 C 76,2 92,8 101,18 C 111,28 118,44 117,59 C 116,75 110,91 99,102 C 88,113 72,118 57,117 C 41,116 26,110 16,98 C 6,86 1,70 2,55 C 3,39 10,24 22,14 C 34,4 47,4 60,3 Z"
+                      fill="url(#luxWaxGradInteractive)"
+                      stroke="#FAF0F1"
+                      strokeOpacity="0.65"
+                      strokeWidth="1.8"
+                    />
+
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="43"
+                      fill="none"
+                      stroke="url(#goldRimGradInteractive)"
+                      strokeWidth="1.4"
+                      strokeDasharray="2,3"
+                      strokeOpacity="0.85"
+                    />
+                  </svg>
+
+                  {/* Inner Stamped Center with Monogram & Heart */}
+                  <div className="relative z-10 w-[58px] h-[58px] sm:w-[68px] sm:h-[68px] rounded-full border border-[#FAF0F1]/70 bg-gradient-to-tl from-[#8C4249] via-[#BD6D74] to-[#E2A6AB] flex flex-col items-center justify-center shadow-inner">
+                    <span className="font-serif text-base sm:text-xl font-bold tracking-widest text-[#FFFBF9] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                      {couple.monogram}
+                    </span>
+                    <div className="flex items-center gap-1 mt-0.5 opacity-90">
+                      <span className="w-1.5 h-[1px] bg-champagne" />
+                      <Heart className="w-2.5 h-2.5 text-champagne fill-champagne" />
+                      <span className="w-1.5 h-[1px] bg-champagne" />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          BOTTOM CONTROLS & INTERACTIVE AUDIO TOGGLE
+          ========================================================================= */}
+      <motion.footer
+        initial={{ opacity: 0, y: 15 }}
+        animate={isOpening && stage !== 'card-presented' ? { opacity: 0, y: 15 } : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-xl z-20 pb-1 sm:pb-3 flex flex-col items-center gap-2.5 text-center"
+      >
+        {/* Interactive Prompt or Drag Instruction */}
+        {stage === 'idle' ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleOpen}
+              className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-espresso hover:text-terracotta transition-colors flex items-center gap-1.5 group"
+            >
+              <span>{couple.envelopePrompt}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        ) : stage === 'card-peeking' ? (
+          <button
+            onClick={handleRevealCard}
+            className="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase text-terracotta animate-pulse flex items-center gap-1.5"
+          >
+            <span>Drag card upward to reveal invitation ↑</span>
+          </button>
+        ) : (
+          <p className="text-[10px] sm:text-xs tracking-[0.16em] uppercase text-espresso/70">
+            Cydrill & Mary Grace • 21 December 2026
+          </p>
+        )}
+
+        {/* Audio Toggle Pill with Dancing Equalizer Bars */}
+        <label className="inline-flex items-center gap-2.5 text-[10.5px] sm:text-xs text-espresso/90 cursor-pointer bg-alabaster/90 hover:bg-alabaster px-4 py-1.5 rounded-full border border-terracotta/25 shadow-sm transition-all hover:shadow">
+          <input
+            type="checkbox"
+            checked={withMusic}
+            onChange={(e) => setWithMusic(e.target.checked)}
+            className="accent-terracotta rounded cursor-pointer w-3.5 h-3.5"
+          />
+
+          {withMusic ? (
+            <div className="flex items-center gap-0.5 h-3.5 px-0.5">
+              <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance1 0.7s infinite alternate' }} />
+              <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance2 0.5s infinite alternate' }} />
+              <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance3 0.8s infinite alternate' }} />
+            </div>
+          ) : (
+            <VolumeX className="w-3.5 h-3.5 text-espresso/50 shrink-0" />
+          )}
+
+          <span className="font-medium">Play {music.displayLabel}</span>
+        </label>
+      </motion.footer>
+
+      {/* =========================================================================
+          INTERACTIVE MODAL: PERSONALIZE RECIPIENT NAME DIALOG
+          ========================================================================= */}
+      <AnimatePresence>
+        {isEditingRecipient && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] bg-espresso/60 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 10 }}
+              className="bg-alabaster rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-champagne relative text-center"
+            >
+              <button
+                onClick={() => setIsEditingRecipient(false)}
+                className="absolute top-3.5 right-3.5 p-1 rounded-full text-espresso/60 hover:text-espresso"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <span className="text-[10px] uppercase tracking-[0.28em] text-terracotta font-semibold block mb-1">
+                Personalize Your Envelope
+              </span>
+              <h4 className="font-serif text-xl sm:text-2xl font-bold text-espresso mb-2">
+                Write Your Name
+              </h4>
+              <p className="text-xs text-espresso/70 mb-4 leading-relaxed">
+                Enter your name or family name to see it beautifully hand-lettered on the envelope jacket!
+              </p>
+
+              <form onSubmit={handleSaveRecipient} className="space-y-3">
+                <input
+                  type="text"
+                  value={editInputValue}
+                  onChange={(e) => setEditInputValue(e.target.value)}
+                  placeholder="e.g. Tita Maria & Tito Joey"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-terracotta/30 bg-white text-espresso text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/50 shadow-inner"
+                  autoFocus
+                />
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecipientName('');
+                      setIsEditingRecipient(false);
+                    }}
+                    className="flex-1 py-2 rounded-xl text-xs font-medium text-espresso/70 hover:bg-sand-light transition-colors"
+                  >
+                    Reset to Default
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 rounded-xl bg-terracotta text-alabaster text-xs font-semibold uppercase tracking-wider shadow-sm hover:brightness-110 transition-all"
+                  >
+                    Save & Preview
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};

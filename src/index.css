@@ -1,0 +1,148 @@
+@config "../tailwind.config.cjs";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: #FAFBF9;
+    color: #222B23;
+    scroll-behavior: smooth;
+    touch-action: pan-x pan-y;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent iOS Safari from auto-zooming when tapping RSVP inputs/textareas */
+  @media screen and (max-width: 768px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  h1, h2, h3, h4, .font-editorial {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+}
+
+/* Subtle handmade cotton paper grain overlay */
+.paper-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+/* Boho Arch Frame */
+.boho-arch {
+  border-top-left-radius: 9999px;
+  border-top-right-radius: 9999px;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+
+.boho-arch-sm {
+  border-top-left-radius: 140px;
+  border-top-right-radius: 140px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* 3D Envelope perspective utilities */
+.perspective-1000 {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Filmstrip border perforations */
+.filmstrip-holes {
+  background-image: radial-gradient(circle, #FAFBF9 38%, transparent 42%);
+  background-size: 28px 18px;
+  background-repeat: repeat-x;
+}
+
+/* Custom sage & blush scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F2F5F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8FA68B;
+  border-radius: 9999px;
+  border: 2px solid #F2F5F0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B8467;
+}
+
+/* Upgraded Envelope & Splash Screen Animations */
+@keyframes floatPetal {
+  0% {
+    transform: translateY(-20px) rotate(0deg) translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(105vh) rotate(360deg) translateX(50px);
+    opacity: 0;
+  }
+}
+
+@keyframes waxBreathe {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 8px 18px rgba(160, 90, 96, 0.38));
+  }
+  50% {
+    transform: scale(1.045);
+    filter: drop-shadow(0 12px 26px rgba(160, 90, 96, 0.6)) drop-shadow(0 0 14px rgba(232, 197, 200, 0.5));
+  }
+}
+
+@keyframes eqDance1 {
+  0%, 100% { height: 4px; }
+  50% { height: 14px; }
+}
+
+@keyframes eqDance2 {
+  0%, 100% { height: 12px; }
+  50% { height: 5px; }
+}
+
+@keyframes eqDance3 {
+  0%, 100% { height: 6px; }
+  50% { height: 15px; }
+}
+
+@keyframes goldShimmerSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-wax-breathe {
+  animation: waxBreathe 3s ease-in-out infinite;
+}
+
+.animate-shimmer-sweep {
+  background: linear-gradient(90deg, rgba(200,169,126,0) 0%, rgba(255,255,255,0.7) 50%, rgba(200,169,126,0) 100%);
+  background-size: 200% 100%;
+  animation: goldShimmerSweep 3s infinite;
+}
