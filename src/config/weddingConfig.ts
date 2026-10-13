@@ -89,59 +89,39 @@ export const weddingConfig = {
       '“And over all these virtues put on love, which binds them all together in perfect unity.” — Colossians 3:14',
   },
 
-  // 1B. BACKGROUND MUSIC & SYNCED LYRICS
+  // 1B. BACKGROUND MUSIC & SCRIPTURE REFLECTIONS
   music: {
-    title: 'I Prayed For You',
-    artist: 'Clash bae',
-    displayLabel: '“I Prayed For You” — Clash bae',
+    title: 'Christian Wedding Instrumental',
+    artist: 'Piano & Strings',
+    displayLabel: '“Christian Wedding Song” (Instrumental)',
     audioUrl: '/audio/i-prayed-for-you.mp3',
     youtubeUrl: 'https://www.youtube.com/watch?v=szqDUd63c94',
     lyrics: [
-      { time: 0.0, text: '♪ “I Prayed For You” — Clash bae ♪' },
-      // Verse 1A
-      { time: 17.5, text: 'Before I knew your voice, I prayed your heart,' },
-      { time: 23.5, text: 'Through quiet nights, though miles apart.' },
-      { time: 30.4, text: 'I asked the Lord for someone true,' },
-      { time: 36.8, text: 'And all along, He made you new.' },
-      // Verse 1B
-      { time: 43.2, text: 'Before I saw your face, I knelt and cried,' },
-      { time: 50.2, text: '“Lord, send the one to walk beside.”' },
-      { time: 58.5, text: 'Through every season, dark and new,' },
-      { time: 63.8, text: 'He wrote this day and led me to you.' },
-      // Chorus 1
-      { time: 71.0, text: 'I prayed for you, you prayed for me,' },
-      { time: 74.5, text: 'Before our hearts had eyes to see.' },
-      { time: 77.8, text: 'Now faith and love have found their place,' },
-      { time: 81.2, text: 'Two souls made one by boundless grace.' },
-      { time: 86.0, text: 'I prayed for you...' },
-      // Verse 2A
-      { time: 92.6, text: 'Through waiting years, my hope stayed near,' },
-      { time: 99.4, text: 'Each whispered prayer brought Heaven here.' },
-      { time: 106.2, text: 'Now standing close, I see it’s true—' },
-      { time: 113.1, text: 'God kept His word and brought me you.' },
-      // Verse 2B
-      { time: 120.0, text: 'The nights were long, but I still believed,' },
-      { time: 126.6, text: 'His promise more than I conceived.' },
-      { time: 133.2, text: 'Now every breath, my heart knows who—' },
-      { time: 140.1, text: 'I waited all my life for you.' },
-      // Chorus 2
-      { time: 147.8, text: 'I prayed for you, you prayed for me,' },
-      { time: 151.2, text: 'Before our hearts had eyes to see.' },
-      { time: 154.6, text: 'Now faith and love have found their place,' },
-      { time: 158.0, text: 'Two souls made one by boundless grace.' },
-      { time: 163.8, text: 'I prayed for you...' },
-      // Bridge
-      { time: 168.8, text: 'Every tear was not in vain,' },
-      { time: 171.7, text: 'Every wait was worth the pain.' },
-      { time: 175.2, text: 'He wrote our story line by line,' },
-      { time: 178.5, text: 'And called it holy, yours and mine.' },
-      // Outro
-      { time: 184.2, text: 'I prayed for you, you prayed for me,' },
-      { time: 187.7, text: 'And love became our melody.' },
-      { time: 191.4, text: 'Now every vow we speak is true—' },
-      { time: 194.5, text: 'God heard our hearts...' },
-      { time: 198.2, text: 'I prayed for you...' },
-      { time: 206.0, text: '♪ Cydrill and Mary Grace • Forever Begins ♪' },
+      { time: 0.0, text: '♪ Christian Wedding Song (Instrumental) ♪' },
+      {
+        time: 18.0,
+        text: '“For this prayer I prayed, and the Lord has granted what I asked of Him.” — 1 Samuel 1:27',
+      },
+      {
+        time: 55.0,
+        text: '“Love is patient, love is kind. It always protects, always trusts, always hopes, always perseveres.” — 1 Corinthians 13:4-7',
+      },
+      {
+        time: 95.0,
+        text: '“A cord of three strands is not quickly broken.” — Ecclesiastes 4:12',
+      },
+      {
+        time: 135.0,
+        text: '“I have found the one whom my soul loves.” — Song of Solomon 3:4',
+      },
+      {
+        time: 175.0,
+        text: '“Two souls made one by God’s boundless grace.”',
+      },
+      {
+        time: 210.0,
+        text: '♪ Cydrill and Mary Grace • December 21, 2026 ♪',
+      },
     ] as LyricLine[],
   },
 
@@ -300,6 +280,19 @@ export const weddingConfig = {
       subtitle: 'SEMI-FORMAL / FORMAL ATTIRE',
       note: 'We kindly encourage our guests to wear semi-formal/formal attire with these colors on our special day.',
     },
+    sponsors: {
+      title: 'PRINCIPAL SPONSORS',
+      subtitle: 'NINONG & NINANG ATTIRE GUIDE',
+      ninang: {
+        title: 'Ninangs',
+        attire: 'Floor-length formal gowns in Champagne, Rose Gold, or Rose Beige.',
+        note: 'We kindly ask to leave Sage Green for the bridesmaids.',
+      },
+      ninong: {
+        title: 'Ninongs',
+        attire: 'Barong Tagalog or a Charcoal Grey / Black Suit with a Blush Pink necktie.',
+      },
+    },
     swatches: [
       {
         name: 'Soft Blush Pink',
@@ -334,18 +327,7 @@ export const weddingConfig = {
       title: 'A NOTE ON GIFTS',
       message:
         'With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request, but if you desire to give us nonetheless, a monetary gift is one we humbly request.',
-      bankDetails: [
-        {
-          provider: 'BPI / Bank Transfer',
-          accountName: 'Cydrill Geneza / Mary Grace Terminez',
-          accountNumber: '1234 • 5678 • 90',
-        },
-        {
-          provider: 'GCash / Maya',
-          accountName: 'Mary Grace Terminez',
-          accountNumber: '0916 • 345 • 5595',
-        },
-      ],
+      bankDetails: [] as { provider: string; accountName: string; accountNumber: string }[],
     },
     unplugged: {
       title: 'UNPLUGGED CEREMONY',
@@ -580,7 +562,7 @@ export const weddingConfig = {
         ?.VITE_GOOGLE_SHEET_WEB_APP_URL ||
       'https://script.google.com/macros/s/AKfycbxmyYwioApINP3Y3pdhRIJJm0ooXl9kzqkAgWLQDToyGNt_QrU0PsxE0APKvqfUZ6U09Q/exec',
     deadlineText:
-      'A favor of your reply is requested on or before December 2026 • Message Mary Grace Terminez at 0916-345-5595 or thru FB/Messenger',
+      'A favor of your reply is requested on or before December 1, 2026 • Message Mary Grace Terminez at 0916-345-5595 or thru FB/Messenger',
   },
 
   // 10. INITIAL GUESTBOOK WISHES (Empty so only real Google Sheet RSVPs are shown)

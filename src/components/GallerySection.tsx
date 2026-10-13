@@ -616,14 +616,25 @@ export const GallerySection: React.FC = () => {
 
             <motion.div
               key={allPhotos[activePhotoIndex].id}
-              initial={{ scale: 0.94, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.94, opacity: 0 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.25}
+              onDragEnd={(_e, info) => {
+                if (info.offset.x < -50 || info.velocity.x < -300) {
+                  setActivePhotoIndex((prev) => (prev !== null ? (prev + 1) % allPhotos.length : null));
+                } else if (info.offset.x > 50 || info.velocity.x > 300) {
+                  setActivePhotoIndex((prev) => (prev !== null ? (prev - 1 + allPhotos.length) % allPhotos.length : null));
+                }
+              }}
+              initial={{ scale: 0.94, opacity: 0, x: 20 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0.94, opacity: 0, x: -20 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
-              className="max-w-3xl w-full bg-alabaster p-4 sm:p-6 rounded-3xl shadow-2xl text-center border border-blush"
+              className="max-w-3xl w-full bg-alabaster p-4 sm:p-6 rounded-3xl shadow-2xl text-center border border-blush touch-pan-y cursor-grab active:cursor-grabbing select-none"
             >
               {allPhotos[activePhotoIndex].chapterTag && (
-                <span className="inline-block text-[10px] sm:text-xs uppercase tracking-[0.25em] text-rust font-bold bg-blush-light border border-blush/60 px-3.5 py-1 rounded-full mb-3">
+                <span className="inline-block text-[10px] sm:text-xs uppercase tracking-[0.25em] text-rust font-bold bg-blush-light border border-blush/60 px-3.5 py-1 rounded-full mb-3 pointer-events-none">
                   {allPhotos[activePhotoIndex].chapterTag}
                 </span>
               )}
@@ -631,21 +642,22 @@ export const GallerySection: React.FC = () => {
               <img
                 src={allPhotos[activePhotoIndex].url}
                 alt={allPhotos[activePhotoIndex].caption}
-                className="w-full max-h-[60vh] object-contain rounded-xl bg-espresso/5"
+                draggable={false}
+                className="w-full max-h-[60vh] object-contain rounded-xl bg-espresso/5 pointer-events-none select-none"
               />
 
-              <p className="font-script text-3xl sm:text-4xl text-rust mt-3.5">
+              <p className="font-script text-3xl sm:text-4xl text-rust mt-3.5 pointer-events-none">
                 {allPhotos[activePhotoIndex].caption}
               </p>
 
               {allPhotos[activePhotoIndex].storyNote && (
-                <p className="text-xs sm:text-sm text-espresso/80 max-w-xl mx-auto mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-sm text-espresso/80 max-w-xl mx-auto mt-1.5 leading-relaxed pointer-events-none">
                   {allPhotos[activePhotoIndex].storyNote}
                 </p>
               )}
 
-              <p className="text-[10px] text-espresso/45 uppercase tracking-widest mt-3">
-                Memory {activePhotoIndex + 1} of {allPhotos.length}
+              <p className="text-[10px] text-espresso/45 uppercase tracking-widest mt-3 pointer-events-none">
+                Memory {activePhotoIndex + 1} of {allPhotos.length} • Swipe to browse
               </p>
             </motion.div>
 

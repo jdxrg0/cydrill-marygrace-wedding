@@ -136,6 +136,100 @@ export const DressCodeSection: React.FC = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Principal Sponsors Dedicated Attire Card */}
+        {dressCode.sponsors && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.7 }}
+            className="mt-6 sm:mt-10 bg-sand-light/85 rounded-3xl p-5 sm:p-8 border border-champagne/50 shadow-card text-left max-w-4xl mx-auto"
+          >
+            <div className="text-center mb-5 sm:mb-6">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.28em] text-rust font-semibold">
+                Special Attire Guide
+              </span>
+              <h3 className="font-serif text-xl sm:text-3xl text-espresso font-bold mt-1">
+                Principal Sponsors (Ninongs &amp; Ninangs)
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Ninangs Card */}
+              <div className="bg-alabaster rounded-2xl p-4 sm:p-5 border border-blush/40 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-serif text-lg sm:text-xl font-bold text-espresso">
+                      Ninangs
+                    </h4>
+                    <span className="text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blush-rose/15 text-rust font-semibold border border-blush-rose/30">
+                      Formal Gowns
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-espresso/90 font-medium leading-relaxed">
+                    {dressCode.sponsors.ninang.attire}
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-rust font-serif italic mt-2">
+                    ✦ Note: {dressCode.sponsors.ninang.note}
+                  </p>
+                </div>
+                {/* Visual Swatch Chips for Champagne, Rose Gold, Rose Beige */}
+                <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-sand-dark/30">
+                  <span className="text-[10px] uppercase tracking-wider text-espresso/60 font-semibold">
+                    Palette:
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded-full border border-champagne text-espresso font-medium shadow-xs">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#F7E7CE] border border-black/10" />
+                      Champagne
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded-full border border-champagne text-espresso font-medium shadow-xs">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#B76E79] border border-black/10" />
+                      Rose Gold
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded-full border border-champagne text-espresso font-medium shadow-xs">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#E8D3C6] border border-black/10" />
+                      Rose Beige
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ninongs Card */}
+              <div className="bg-alabaster rounded-2xl p-4 sm:p-5 border border-champagne/50 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-serif text-lg sm:text-xl font-bold text-espresso">
+                      Ninongs
+                    </h4>
+                    <span className="text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-sand-dark/30 text-espresso font-semibold border border-sand-dark/40">
+                      Barong or Suit
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-espresso/90 font-medium leading-relaxed">
+                    {dressCode.sponsors.ninong.attire}
+                  </p>
+                </div>
+                {/* Visual Style Tags */}
+                <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-sand-dark/30">
+                  <span className="text-[10px] uppercase tracking-wider text-espresso/60 font-semibold">
+                    Accents:
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] bg-white px-2 py-0.5 rounded-full border border-champagne text-espresso font-medium shadow-xs">
+                      Traditional Barong Tagalog
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded-full border border-champagne text-espresso font-medium shadow-xs">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#EACCCE] border border-black/10" />
+                      Blush Pink Necktie
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <TornPaperDivider fill="#F2F5F0" />

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, PhoneOff, Hash, Copy, Check, CreditCard, ChevronDown } from 'lucide-react';
+import { Gift, PhoneOff, Hash, Copy, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { weddingConfig } from '../config/weddingConfig';
 
 export const RemindersSection: React.FC = () => {
   const { reminders, couple } = weddingConfig;
   const [copiedHashtag, setCopiedHashtag] = useState(false);
-  const [showGiftDetails, setShowGiftDetails] = useState(false);
 
   const handleCopyHashtag = () => {
     navigator.clipboard.writeText(couple.hashtag);
@@ -56,68 +55,13 @@ export const RemindersSection: React.FC = () => {
               </h3>
             </div>
 
-            <div className="md:col-span-9 text-left space-y-3 sm:space-y-4 px-1 sm:px-0">
-              <p className="text-xs sm:text-base text-espresso/85 leading-relaxed">
-                {reminders.giftNote.message}
+            <div className="md:col-span-9 text-left space-y-2 sm:space-y-3 px-1 sm:px-0">
+              <p className="font-serif italic text-xs sm:text-base text-espresso/90 leading-relaxed">
+                “{reminders.giftNote.message}”
               </p>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setShowGiftDetails(!showGiftDetails)}
-                  aria-expanded={showGiftDetails}
-                  className="inline-flex items-center gap-2 text-[11px] sm:text-xs uppercase tracking-[0.16em] font-semibold text-rust hover:text-espresso border border-rust/35 hover:border-rust px-3.5 py-2 rounded-full transition-all duration-300 active:scale-95"
-                >
-                  <CreditCard className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    {showGiftDetails ? 'Hide Digital Gift Details' : 'View Digital Gift / Bank Details'}
-                  </span>
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-out ${
-                      showGiftDetails ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {showGiftDetails && (
-                    <motion.div
-                      key="gift-details-panel"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <div className="pt-3.5 grid grid-cols-2 gap-2.5 sm:gap-3 text-left">
-                        {reminders.giftNote.bankDetails.map((bank, idx) => (
-                          <motion.div
-                            key={bank.provider}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 6 }}
-                            transition={{
-                              delay: idx * 0.06,
-                              duration: 0.3,
-                              ease: 'easeOut',
-                            }}
-                            className="bg-sand-light/90 p-3 sm:p-3.5 rounded-xl border border-champagne/40 text-xs"
-                          >
-                            <p className="font-bold text-rust uppercase tracking-wider text-[11px] sm:text-xs">
-                              {bank.provider}
-                            </p>
-                            <p className="text-espresso font-medium mt-1 truncate">
-                              {bank.accountName}
-                            </p>
-                            <p className="font-mono text-[11px] sm:text-xs text-espresso/80 mt-0.5">
-                              {bank.accountNumber}
-                            </p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <p className="text-[10.5px] sm:text-xs text-rust font-semibold tracking-wide uppercase">
+                ✦ Your presence and prayers are our greatest treasure
+              </p>
             </div>
           </motion.div>
 

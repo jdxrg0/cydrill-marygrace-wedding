@@ -310,7 +310,6 @@ export const MinimalInvitationView: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
   const [selectedSwatch, setSelectedSwatch] = useState<ColorSwatch>(dressCode.swatches[0]);
   const [copiedHashtag, setCopiedHashtag] = useState(false);
-  const [showGiftDetails, setShowGiftDetails] = useState(false);
   const [showAllPortraits, setShowAllPortraits] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -1185,6 +1184,32 @@ export const MinimalInvitationView: React.FC = () => {
                   <p className="text-xs text-espresso/80 mt-0.5">{selectedSwatch.attireTip}</p>
                 </div>
               </div>
+
+              <div className="mt-8 pt-6 border-t border-sand-dark text-left">
+                <span className="text-[10px] uppercase tracking-[0.22em] text-rust font-semibold block text-center mb-1">
+                  Principal Sponsors Attire Guide
+                </span>
+                <h4 className="font-serif text-xl font-bold text-espresso text-center mb-4">
+                  Ninongs &amp; Ninangs
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-sand-light p-4 rounded-2xl border border-sand-dark">
+                    <p className="font-bold text-rust uppercase text-xs tracking-wider">Ninangs</p>
+                    <p className="text-xs text-espresso mt-1 leading-relaxed">
+                      Floor-length formal gowns in Champagne, Rose Gold, or Rose Beige.
+                    </p>
+                    <p className="text-[10.5px] text-rust/90 italic mt-1.5">
+                      ✦ Note: We kindly ask to leave Sage Green for the bridesmaids.
+                    </p>
+                  </div>
+                  <div className="bg-sand-light p-4 rounded-2xl border border-sand-dark">
+                    <p className="font-bold text-rust uppercase text-xs tracking-wider">Ninongs</p>
+                    <p className="text-xs text-espresso mt-1 leading-relaxed">
+                      Barong Tagalog or a Charcoal Grey / Black Suit with a Blush Pink necktie.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1220,49 +1245,9 @@ export const MinimalInvitationView: React.FC = () => {
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-sand">
-                <button
-                  type="button"
-                  onClick={() => setShowGiftDetails(!showGiftDetails)}
-                  className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] font-semibold text-terracotta hover:text-rust"
-                >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>{showGiftDetails ? 'Hide Details' : 'Gift Registry / Bank'}</span>
-                  <motion.span
-                    animate={{ rotate: showGiftDetails ? 180 : 0 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="inline-flex"
-                  >
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </motion.span>
-                </button>
-                <AnimatePresence initial={false}>
-                  {showGiftDetails && (
-                    <motion.div
-                      key="minimal-gift-details"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{
-                        height: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
-                        opacity: { duration: 0.28, ease: 'easeInOut' },
-                      }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-3 space-y-2 text-left">
-                        {reminders.giftNote.bankDetails.map((b) => (
-                          <div
-                            key={b.provider}
-                            className="bg-sand-light p-2.5 rounded-xl border border-sand-dark text-[11px]"
-                          >
-                            <p className="font-bold text-rust">{b.provider}</p>
-                            <p className="text-espresso">{b.accountName}</p>
-                            <p className="font-mono text-espresso/75">{b.accountNumber}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-rust font-semibold">
+                  ✦ Your prayers &amp; presence are our greatest treasure
+                </p>
               </div>
             </div>
 

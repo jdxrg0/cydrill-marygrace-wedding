@@ -38,6 +38,8 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
   const [isLyricsCardOpen, setIsLyricsCardOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(222.35);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubTime, setScrubTime] = useState<number | null>(null);
 
   const { couple, schedule, music } = weddingConfig;
   const lyrics = music.lyrics;
@@ -106,6 +108,28 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
   const prevLyric = activeLyricIndex > 0 ? lyrics[activeLyricIndex - 1] : null;
   const nextLyric = activeLyricIndex < lyrics.length - 1 ? lyrics[activeLyricIndex + 1] : null;
   const progressPercent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+
+  // Effective playback time shown on the scrubber (frozen to scrubTime during user drag to prevent audio engine lag)
+  const displayTime = isScrubbing && scrubTime !== null ? scrubTime : currentTime;
+  const scrubberPercent = duration > 0 ? Math.min(100, Math.max(0, (displayTime / duration) * 100)) : 0;
+
+  const handleScrubStart = () => {
+    setIsScrubbing(true);
+    setScrubTime(currentTime);
+  };
+
+  const handleScrubChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setScrubTime(val);
+  };
+
+  const handleScrubCommit = () => {
+    if (scrubTime !== null && !Number.isNaN(scrubTime)) {
+      soundManager.seek(scrubTime);
+    }
+    setIsScrubbing(false);
+    setScrubTime(null);
+  };
 
   const handleLinkClick = () => {
     setIsMenuOpen(false);
@@ -187,22 +211,42 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               </button>
             </div>
 
-            {/* Interactive Progress Scrubber */}
-            <div className="pt-2 border-t border-sand/70">
-              <input
-                type="range"
-                min={0}
-                max={duration}
-                step={0.5}
-                value={currentTime}
-                onChange={(e) => soundManager.seek(parseFloat(e.target.value))}
-                aria-label="Seek song timeline"
-                className="w-full h-1.5 bg-sand rounded-lg appearance-none cursor-pointer accent-terracotta"
-              />
-              <div className="flex justify-between text-[10px] font-medium text-espresso/60 mt-1">
-                <span>{formatTime(currentTime)}</span>
-                <span className="uppercase tracking-widest text-terracotta/80">Tap any line to jump</span>
-                <span>{formatTime(duration)}</span>
+            {/* Interactive Progress Scrubber (Butter-Smooth 60FPS Dragging with No Audio Lag) */}
+            <div className="pt-2.5 pb-0.5 border-t border-sand/70">
+              <div className="relative py-1 flex items-center">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration}
+                  step={0.1}
+                  value={displayTime}
+                  onPointerDown={handleScrubStart}
+                  onTouchStart={handleScrubStart}
+                  onMouseDown={handleScrubStart}
+                  onChange={handleScrubChange}
+                  onPointerUp={handleScrubCommit}
+                  onTouchEnd={handleScrubCommit}
+                  onMouseUp={handleScrubCommit}
+                  onKeyUp={(e) => {
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                      handleScrubCommit();
+                    }
+                  }}
+                  aria-label="Seek song timeline"
+                  style={{
+                    background: `linear-gradient(to right, #DF7F66 0%, #DF7F66 ${scrubberPercent}%, #E7DED3 ${scrubberPercent}%, #E7DED3 100%)`,
+                  }}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-terracotta touch-pan-x"
+                />
+              </div>
+              <div className="flex justify-between text-[10px] font-medium text-espresso/60 mt-1 select-none">
+                <span className={isScrubbing ? 'text-terracotta font-bold tabular-nums' : 'tabular-nums'}>
+                  {formatTime(displayTime)}
+                </span>
+                <span className="uppercase tracking-widest text-terracotta/80">
+                  {isScrubbing ? 'Release to jump' : 'Tap any line or drag to seek'}
+                </span>
+                <span className="tabular-nums">{formatTime(duration)}</span>
               </div>
             </div>
           </motion.div>
@@ -216,17 +260,18 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
           {isPlayingMusic && (
             <motion.button
               type="button"
-              initial={{ opacity: 0, x: 16, scale: 0.92 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 16, scale: 0.92 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              whileTap={{ scale: 0.98 }}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsLyricsCardOpen((prev) => !prev);
               }}
               title="Click to expand live synced lyrics"
               aria-label="Expand live synced lyrics"
-              className="relative overflow-hidden w-[calc(100vw-132px)] sm:w-72 md:w-80 shrink-0 h-11 px-3.5 rounded-full bg-alabaster hover:bg-sand-light text-espresso border border-blush shadow-xl flex items-center gap-2.5 text-left transition-all active:scale-95 cursor-pointer select-none"
+              className="relative overflow-hidden w-[calc(100vw-132px)] sm:w-72 md:w-80 shrink-0 h-11 px-3.5 rounded-full bg-alabaster hover:bg-sand-light text-espresso border border-blush shadow-xl flex items-center gap-2.5 text-left transition-colors duration-150 cursor-pointer select-none"
             >
               {/* Animated Mini Equalizer Bars */}
               <span className="flex items-end gap-[2px] h-3.5 shrink-0 pointer-events-none" aria-hidden="true">
@@ -237,13 +282,13 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
 
               {/* Smoothly Cross-Fading Synced Lyric Line */}
               <div className="flex-1 min-w-0 overflow-hidden pointer-events-none">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout" initial={false}>
                   <motion.p
                     key={activeLyricIndex}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
                     className="font-serif italic text-xs sm:text-sm font-semibold text-espresso truncate"
                   >
                     {currentLyric.text}
@@ -261,7 +306,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               {/* Subtle Bottom Song Progress Bar */}
               <span
                 style={{ width: `${progressPercent}%` }}
-                className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-terracotta via-blush-rose to-champagne transition-all duration-300 pointer-events-none"
+                className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-terracotta via-blush-rose to-champagne pointer-events-none"
               />
             </motion.button>
           )}

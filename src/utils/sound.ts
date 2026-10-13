@@ -17,6 +17,7 @@ class WeddingMusicManager {
   private fallbackIntervalId: number | null = null;
   private step = 0;
   private fallbackStartTime = 0;
+  private fallbackElapsed = 0;
   private listeners: Set<TimeUpdateListener> = new Set();
 
   // Fallback acoustic chord progression if audio file ever fails to load
@@ -83,10 +84,10 @@ class WeddingMusicManager {
     if (this.audio && !Number.isNaN(this.audio.currentTime)) {
       return this.audio.currentTime;
     }
-    if (this.isPlaying && this.fallbackStartTime > 0) {
-      return ((Date.now() - this.fallbackStartTime) / 1000) % 222.35;
+    if (this.fallbackStartTime > 0 && this.isPlaying) {
+      return (this.fallbackElapsed + (Date.now() - this.fallbackStartTime) / 1000) % 222.35;
     }
-    return 0;
+    return this.fallbackElapsed % 222.35;
   }
 
   public getDuration(): number {
@@ -102,10 +103,16 @@ class WeddingMusicManager {
   }
 
   public seek(seconds: number): void {
+    const clamped = Math.max(0, Math.min(seconds, this.getDuration()));
     if (this.audio) {
-      this.audio.currentTime = Math.max(0, Math.min(seconds, this.getDuration()));
-      this.notifyListeners();
+      this.audio.currentTime = clamped;
+    } else {
+      this.fallbackElapsed = clamped;
+      if (this.isPlaying) {
+        this.fallbackStartTime = Date.now();
+      }
     }
+    this.notifyListeners();
   }
 
   public playEnvelopeChime() {
@@ -254,6 +261,14 @@ class WeddingMusicManager {
   }
 
   public stop(resetToBeginning = false): void {
+    if (this.fallbackStartTime > 0 && this.isPlaying) {
+      this.fallbackElapsed += (Date.now() - this.fallbackStartTime) / 1000;
+      this.fallbackStartTime = 0;
+    }
+    if (resetToBeginning) {
+      this.fallbackElapsed = 0;
+    }
+
     this.isPlaying = false;
     this.clearFade();
     this.stopSyncLoop();
