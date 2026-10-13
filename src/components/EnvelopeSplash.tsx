@@ -189,8 +189,8 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     setTilt({
-      x: -(y * 10),
-      y: x * 12,
+      x: -(y * 8),
+      y: x * 10,
     });
   };
 
@@ -240,7 +240,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const handleOpen = () => {
     if (isOpening) return;
 
-    // Reset tilt so envelope straightens out
     setTilt({ x: 0, y: 0 });
 
     if (withMusic && onStartAudio) {
@@ -250,18 +249,23 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     fireConfetti();
     setStage('unsealing');
 
-    // Stage 2: Flap folds backward
+    // Flap folds backward
     setTimeout(() => {
       setStage('flap-open');
     }, 320);
 
-    // Stage 3: Card peeks out of the pocket
+    // Card begins to glide out of pocket
     setTimeout(() => {
       setStage('card-peeking');
     }, 600);
+
+    // Card automatically glides up into full presented glory!
+    setTimeout(() => {
+      handleRevealCard();
+    }, 1100);
   };
 
-  // Action: Reveal the card to presented state (either by drag or tap)
+  // Action: Reveal the card to presented state (drag or tap)
   const handleRevealCard = () => {
     if (stage === 'card-presented' || stage === 'transitioning') return;
 
@@ -300,7 +304,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const handleSealPointerDown = () => {
     if (isOpening) return;
 
-    // Synchronously unlock audio inside touch gesture so iOS Safari grants permission
+    // Synchronously unlock audio on user gesture
     if (withMusic && onStartAudio) {
       onStartAudio();
     }
@@ -312,7 +316,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     setShowHoldHint(false);
 
     const startTime = Date.now();
-    const duration = 650; // 650ms tap-and-hold duration
+    const duration = 1200; // 1200ms (1.2s) deliberate tap-and-hold duration
     holdIntervalRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(100, Math.floor((elapsed / duration) * 100));
@@ -325,7 +329,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         setHoldProgress(0);
         handleOpen();
       }
-    }, 20);
+    }, 16);
   };
 
   const handleSealPointerUp = () => {
@@ -434,7 +438,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
           : 'bg-gradient-to-br from-[#F5F8F4] via-[#EAF0E8] to-[#DCE5D8]'
       }`}
     >
-      {/* Ambient Floating Rose Petals & Gold Dust Particles */}
+      {/* Ambient Floating Rose Petals & Gold Dust */}
       <FloatingPetals />
 
       {/* Ambient Sage & Blush Glow Orbs */}
@@ -451,7 +455,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         color="#6B8467"
       />
 
-      {/* Top Header Bar: Skip Button & Nuptials Title */}
+      {/* Top Header Bar */}
       <header className="w-full max-w-4xl flex items-center justify-between z-20 pt-1">
         <div className="text-left">
           <span className="text-[10px] sm:text-xs tracking-[0.3em] uppercase text-rust/80 font-semibold block">
@@ -485,7 +489,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               : { opacity: 1, y: 0, scale: 1 }
           }
           transition={{ duration: 0.45, ease: 'easeOut' }}
-          className="text-center mb-2 sm:mb-4 z-10 pointer-events-none"
+          className="text-center mb-3 sm:mb-5 z-10 pointer-events-none"
         >
           <p className="text-[10px] sm:text-xs uppercase tracking-[0.38em] text-rust/90 font-semibold mb-0.5">
             Formal Wedding Invitation
@@ -508,20 +512,9 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             transform: isOpening ? 'none' : `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
             transition: isOpening ? 'transform 0.4s ease-out' : 'transform 0.15s ease-out',
           }}
-          className="relative w-[92vw] max-w-[480px] aspect-[1.46/1] z-20 my-1 overflow-visible preserve-3d"
+          className="relative w-[94vw] max-w-[500px] aspect-[1.5/1] z-20 my-1 overflow-visible preserve-3d"
         >
           <div className="relative w-full h-full select-none">
-            {/* Specular Light Sheen when tilting */}
-            {!isOpening && (
-              <div
-                style={{
-                  transform: `translate(${tilt.y * 12}px, ${tilt.x * 10}px)`,
-                  opacity: Math.abs(tilt.x) + Math.abs(tilt.y) > 0 ? 0.35 : 0,
-                }}
-                className="pointer-events-none absolute inset-0 z-50 rounded-2xl bg-gradient-to-tr from-transparent via-white/20 to-transparent transition-opacity duration-300"
-              />
-            )}
-
             {/* LAYER 0 (z-0): ENVELOPE BACK JACKET & BOTANICAL INNER LINER */}
             <div
               className={`absolute inset-0 z-0 rounded-2xl shadow-envelope border overflow-hidden transition-colors ${
@@ -591,7 +584,8 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               </div>
             </div>
 
-            {/* LAYER 1 (z-30 when closed, z-[5] when opened): TOP TRIANGULAR ENVELOPE FLAP */}
+            {/* LAYER 1 (z-30 when closed, z-[5] when opened):
+                ELEGANT TAPERED TOP FLAP (Tip rests exactly at the wax seal top rim) */}
             <motion.div
               initial={{ scaleY: 1 }}
               animate={{
@@ -610,15 +604,16 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 transformOrigin: 'top center',
                 zIndex: isFlapBehindCard ? 5 : 30,
               }}
-              className="absolute inset-x-0 top-0 h-[58%] pointer-events-none"
+              className="absolute inset-x-0 top-0 h-[48%] pointer-events-none"
             >
               <svg
-                viewBox="0 0 540 216"
-                className="w-full h-full overflow-visible drop-shadow-[0_4px_8px_rgba(34,43,35,0.14)]"
+                viewBox="0 0 540 180"
+                className="w-full h-full overflow-visible drop-shadow-[0_8px_16px_rgba(34,43,35,0.16)]"
                 preserveAspectRatio="none"
               >
+                {/* Tapered V-Flap */}
                 <path
-                  d="M 0,10 Q 0,0 10,0 L 530,0 Q 540,0 540,10 L 284,204 Q 270,214 256,204 Z"
+                  d="M 0,8 Q 0,0 8,0 L 532,0 Q 540,0 540,8 L 282,168 Q 270,176 258,168 Z"
                   fill={
                     isFlapBehindCard
                       ? isStationery
@@ -629,14 +624,16 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       : '#E3EBE0'
                   }
                   stroke={isStationery ? '#CAD5C6' : '#BAC7B6'}
-                  strokeWidth="2"
+                  strokeWidth="1.6"
                 />
+
+                {/* Delicate Gold/Rose Foil Embossed Border Line */}
                 <path
-                  d="M 18,8 L 262,192 Q 270,198 278,192 L 522,8"
+                  d="M 16,8 L 260,158 Q 270,164 280,158 L 524,8"
                   fill="none"
                   stroke={isFlapBehindCard ? '#C8A97E' : '#D49499'}
                   strokeOpacity={isFlapBehindCard ? '0.7' : '0.55'}
-                  strokeWidth="1.5"
+                  strokeWidth="1.4"
                 />
               </svg>
             </motion.div>
@@ -717,7 +714,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                   }}
                   className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
                 >
-                  {/* Gold Corner Brackets & Inner Border */}
                   <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4]">
                     <div className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-champagne/80" />
                     <div className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-champagne/80" />
@@ -789,7 +785,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                             className="py-1 px-3.5 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9px] sm:text-[11px] font-semibold tracking-[0.16em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
                           >
                             <span className="relative z-10">Step Inside</span>
-                            <ArrowRight className="w-3 h-3 relative z-10" />
+                            <ArrowRight className="w-3.5 h-3.5 relative z-10" />
                             <div className="absolute inset-0 animate-shimmer-sweep pointer-events-none" />
                           </button>
                         )}
@@ -812,7 +808,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                   className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
                 >
                   <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative">
-                    {/* Back Header */}
                     <div className="w-full">
                       <span className="text-[8px] sm:text-[9.5px] uppercase tracking-[0.3em] text-terracotta font-semibold block mb-0.5">
                         A Note From The Couple
@@ -822,7 +817,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       </h3>
                     </div>
 
-                    {/* Romantic Message */}
                     <div className="px-2 my-0.5">
                       <p className="font-editorial text-[10px] sm:text-xs text-espresso/80 italic leading-relaxed">
                         “We prayed for each other long before our paths crossed. Now, as God unites our hearts forever, your prayers and presence will complete our joy.”
@@ -832,10 +826,8 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       </p>
                     </div>
 
-                    {/* Interactive Action Shortcuts on the Card */}
                     <div className="w-full flex flex-col gap-1.5 pt-0.5">
                       <div className="flex items-center justify-center gap-2">
-                        {/* Google Calendar Link */}
                         <a
                           href={getGoogleCalendarUrl()}
                           target="_blank"
@@ -847,7 +839,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           <span>Add to Calendar</span>
                         </a>
 
-                        {/* Copy Hashtag */}
                         <button
                           type="button"
                           onClick={handleCopyHashtag}
@@ -862,7 +853,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                         </button>
                       </div>
 
-                      {/* Flip Back & Enter Buttons */}
                       <div className="flex items-center justify-center gap-2 mt-0.5">
                         <button
                           type="button"
@@ -889,188 +879,124 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             </motion.div>
 
             {/* =========================================================================
-                LAYER 3 (z-20): FRONT ENVELOPE POCKET FLAPS (Left, Right, Bottom)
+                LAYER 3 (z-20): FRONT ENVELOPE POCKET & VELLUM BELLY BAND
+                (Clean, seamless luxury pocket with horizontal translucent vellum band)
                 ========================================================================= */}
             <div
               style={{ zIndex: 20 }}
               className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden"
             >
-              <svg
-                viewBox="0 0 540 372"
-                className="w-full h-full drop-shadow-[0_12px_24px_rgba(34,43,35,0.18)]"
-                preserveAspectRatio="none"
+              {/* Pocket Cardstock Body: Soft Textured Linen Sage */}
+              <div
+                className={`absolute inset-0 pointer-events-none transition-colors shadow-inner ${
+                  isStationery
+                    ? 'bg-gradient-to-b from-[#EAEFE8] via-[#E2EAE0] to-[#D5E0D2]'
+                    : 'bg-gradient-to-b from-[#D4DFD1] via-[#C8D6C4] to-[#BCCDB8]'
+                }`}
               >
-                <polygon
-                  points="0,0 270,195 0,372"
-                  fill={isStationery ? '#EDF3EB' : '#DCE5D8'}
-                  stroke={isStationery ? '#CAD5C6' : '#B8C7B4'}
-                  strokeWidth="1.4"
-                />
-                <polygon
-                  points="540,0 270,195 540,372"
-                  fill={isStationery ? '#E6EDE4' : '#D4DFD0'}
-                  stroke={isStationery ? '#CAD5C6' : '#B8C7B4'}
-                  strokeWidth="1.4"
-                />
-                <polygon
-                  points="0,372 270,174 540,372"
-                  fill={isStationery ? '#F2F6F0' : '#E4ECE1'}
-                  stroke={isStationery ? '#D5E0D1' : '#C5D2C1'}
-                  strokeWidth="1.6"
-                />
-                <line
-                  x1="0"
-                  y1="372"
-                  x2="270"
-                  y2="174"
-                  stroke="#FFFFFF"
-                  strokeOpacity="0.45"
-                  strokeWidth="1.5"
-                />
-                <line
-                  x1="270"
-                  y1="174"
-                  x2="540"
-                  y2="372"
-                  stroke="#FFFFFF"
-                  strokeOpacity="0.45"
-                  strokeWidth="1.5"
-                />
-              </svg>
+                {/* Subtle soft paper depth gradient in lower half */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/[0.04] to-transparent pointer-events-none" />
 
-              {/* INTERACTIVE POSTAGE STAMP (Top Right of Jacket) */}
-              <motion.div
-                animate={
-                  isOpening
-                    ? { opacity: 0, scale: 0.9, y: 10 }
-                    : { opacity: 1, scale: stampSquash ? 0.92 : 1, y: 0 }
-                }
-                transition={{ duration: 0.15 }}
-                className="absolute top-3.5 right-3.5 z-20 pointer-events-auto cursor-pointer group"
-                onClick={handleStampClick}
-                title="Tap stamp to stamp postal cancellation!"
-              >
-                <div className="relative w-16 h-20 sm:w-20 sm:h-24 p-1 rounded-sm bg-[#FAFBF9] border-2 border-dashed border-[#C5D2C1] shadow-sm flex flex-col items-center justify-between text-center rotate-3 group-hover:rotate-0 transition-transform">
-                  <div className="border border-champagne/70 w-full h-full p-1 flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] to-[#F2F5F0]">
-                    <span className="text-[7px] uppercase tracking-[0.2em] text-terracotta font-bold">
-                      PHILIPPINES
+                {/* Stamped Gold Monogram Crest on Front Pocket */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-champagne flex flex-col items-center justify-center">
+                    <span className="font-serif text-2xl sm:text-3xl font-semibold tracking-widest text-espresso">
+                      {couple.monogram}
                     </span>
-                    <Heart className="w-4 h-4 text-blush-rose fill-blush/40 group-hover:scale-110 transition-transform" />
-                    <span className="font-serif text-[9.5px] sm:text-xs font-semibold text-espresso">
-                      FOREVER 2026
-                    </span>
-                  </div>
-
-                  {/* Postal Ink Cancellation Stamp Overlay */}
-                  <div className="absolute -left-3 -top-2 w-16 h-16 sm:w-18 sm:h-18 rounded-full border border-rust/50 flex flex-col items-center justify-center -rotate-12 pointer-events-none opacity-70">
-                    <span className="text-[6px] tracking-widest uppercase font-semibold text-rust">
-                      SAN FABIAN
-                    </span>
-                    <span className="text-[7px] font-mono font-bold text-rust">
-                      21 • 12 • 26
-                    </span>
-                    <div className="w-8 h-[1px] bg-rust/50 my-0.5" />
-                    <span className="text-[5.5px] tracking-wider text-rust">
-                      STAMP #{stampClicks}
+                    <span className="text-[8px] uppercase tracking-[0.25em] text-terracotta mt-0.5">
+                      {schedule.shortDate}
                     </span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
-              {/* PERSONALIZED CALLIGRAPHY RECIPIENT */}
+              {/* =====================================================================
+                  TRANSLUCENT VELLUM BELLY BAND & RECIPIENT CALLIGRAPHY
+                  (Frosted translucent parchment sash across lower third: sage cardstock shows through!)
+                  ===================================================================== */}
               <motion.div
                 animate={
                   isOpening
-                    ? { opacity: 0, x: -15 }
-                    : { opacity: 1, x: 0 }
-                }
-                transition={{ duration: 0.35 }}
-                className="absolute left-4 sm:left-7 top-[34%] z-20 max-w-[64%] sm:max-w-[70%] text-left pointer-events-auto"
-              >
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[7.5px] sm:text-[9px] uppercase tracking-[0.3em] text-rust/70 font-semibold block">
-                    {recipientName ? 'SPECIALLY PREPARED FOR' : 'CORDIALLY INVITED'}
-                  </span>
-
-                  {/* Edit Pencil (stops propagation so envelope doesn't open accidentally) */}
-                  {!isOpening && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditInputValue(recipientName);
-                        setIsEditingRecipient(true);
-                      }}
-                      className="p-1 rounded-full text-rust/60 hover:text-rust hover:bg-alabaster/60 transition-colors"
-                      title="Personalize recipient name on envelope"
-                    >
-                      <Edit3 className="w-2.5 h-2.5" />
-                    </button>
-                  )}
-                </div>
-
-                <p
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isOpening) {
-                      setEditInputValue(recipientName);
-                      setIsEditingRecipient(true);
-                    }
-                  }}
-                  className="font-script text-xl sm:text-3xl md:text-4xl text-espresso font-medium leading-tight drop-shadow-sm truncate cursor-pointer hover:text-terracotta transition-colors"
-                  title="Click to edit name on envelope"
-                >
-                  {recipientName || 'Our Beloved Family & Friends'}
-                </p>
-
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[7px] sm:text-[8.5px] uppercase tracking-[0.22em] text-terracotta font-medium">
-                    {recipientName ? 'WITH JOY & GRATITUDE' : 'TO CELEBRATE OUR WEDDING'}
-                  </span>
-
-                  {/* Share Link Button */}
-                  {recipientName && !isOpening && (
-                    <button
-                      type="button"
-                      onClick={handleCopyShareLink}
-                      className="text-[7px] sm:text-[8px] text-rust/70 hover:text-rust bg-alabaster/70 px-1.5 py-0.5 rounded border border-terracotta/20 flex items-center gap-0.5"
-                      title="Copy link with this name"
-                    >
-                      {copiedLink ? <Check className="w-2 h-2 text-green-600" /> : <Share2 className="w-2 h-2" />}
-                      <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* Satin Ribbon Belly Band */}
-              <motion.div
-                animate={
-                  isOpening
-                    ? { opacity: 0, scaleX: 1.15 }
+                    ? { opacity: 0, scaleX: 1.05 }
                     : { opacity: 1, scaleX: 1 }
                 }
-                transition={{ duration: 0.28 }}
-                className="absolute inset-x-0 top-[52%] -translate-y-1/2 h-8 sm:h-10 z-10 pointer-events-none overflow-hidden"
+                transition={{ duration: 0.25 }}
+                className="absolute inset-x-0 bottom-2.5 sm:bottom-3.5 h-20 sm:h-24 z-20 pointer-events-auto bg-[#FAFBF9]/45 backdrop-blur-md border-y border-[#C8A97E]/40 shadow-[0_2px_12px_rgba(34,43,35,0.04)] flex items-center justify-center px-4 sm:px-8"
               >
-                <div className="w-full h-full bg-gradient-to-r from-blush-rose/70 via-blush/90 to-blush-rose/70 border-y border-blush-rose/50 shadow-sm flex items-center justify-between px-2">
-                  <div className="w-full h-[1px] bg-white/40" />
+                {/* Thin gold foil pinstripe top and bottom */}
+                <div className="absolute inset-x-0 top-0.5 h-[1px] bg-gradient-to-r from-transparent via-[#C8A97E]/50 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0.5 h-[1px] bg-gradient-to-r from-transparent via-[#C8A97E]/50 to-transparent" />
+
+                {/* Recipient Calligraphy Presentation */}
+                <div className="w-full flex flex-col items-center justify-center text-center py-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[7.5px] sm:text-[9px] uppercase tracking-[0.3em] text-rust font-semibold">
+                      {recipientName ? 'SPECIALLY PREPARED FOR' : 'CORDIALLY INVITED'}
+                    </span>
+
+                    {!isOpening && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditInputValue(recipientName);
+                          setIsEditingRecipient(true);
+                        }}
+                        className="p-1 rounded-full text-rust/70 hover:text-rust hover:bg-black/5 transition-colors"
+                        title="Personalize recipient name on envelope"
+                      >
+                        <Edit3 className="w-2.5 h-2.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <p
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isOpening) {
+                        setEditInputValue(recipientName);
+                        setIsEditingRecipient(true);
+                      }
+                    }}
+                    className="font-script text-2xl sm:text-3xl md:text-4xl text-espresso font-medium leading-none drop-shadow-sm cursor-pointer hover:text-terracotta transition-colors px-2 max-w-full"
+                    title="Click to edit name on envelope"
+                  >
+                    {recipientName || 'Our Beloved Family & Friends'}
+                  </p>
+
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <span className="text-[7px] sm:text-[8px] uppercase tracking-[0.22em] text-terracotta font-medium">
+                      {recipientName ? 'WITH JOY & GRATITUDE' : 'TO CELEBRATE OUR WEDDING'}
+                    </span>
+
+                    {recipientName && !isOpening && (
+                      <button
+                        type="button"
+                        onClick={handleCopyShareLink}
+                        className="text-[7px] sm:text-[8px] text-rust/70 hover:text-rust bg-white/70 px-1.5 py-0.5 rounded border border-terracotta/20 flex items-center gap-0.5"
+                        title="Copy link with this name"
+                      >
+                        {copiedLink ? <Check className="w-2 h-2 text-green-600" /> : <Share2 className="w-2 h-2" />}
+                        <span>{copiedLink ? 'Copied!' : 'Share'}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             </div>
 
             {/* =========================================================================
-                LAYER 4 (z-40): WAX SEAL WITH TAP & PRESS-AND-HOLD CHARGE
-                pointer-events-none when opening so it NEVER blocks clicks on the rising card!
+                LAYER 4 (z-40): WAX SEAL WITH TAP-AND-HOLD CHARGE
+                (Centered right where flap apex lands in the middle of envelope)
                 ========================================================================= */}
             <div
               style={{ zIndex: 40 }}
-              className={`absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 ${
+              className={`absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2 ${
                 isOpening ? 'pointer-events-none' : ''
               }`}
             >
               <div className="relative flex flex-col items-center" ref={sealRef}>
-                {/* Floating Hint Pill */}
+                {/* Floating Hint Pill (Soft, luxury palette) */}
                 <AnimatePresence>
                   {stage === 'idle' && (
                     <motion.div
@@ -1082,13 +1008,18 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       }}
                       exit={{ opacity: 0, y: -4 }}
                       transition={{ duration: 0.25 }}
-                      className={`absolute -top-10 sm:-top-11 whitespace-nowrap text-alabaster text-[9px] sm:text-[10.5px] font-sans font-medium tracking-[0.16em] uppercase px-3.5 py-1.5 rounded-full shadow-lg border pointer-events-none flex items-center gap-1.5 transition-all ${
+                      className={`absolute -top-11 whitespace-nowrap text-alabaster text-[9px] sm:text-[10px] font-sans font-medium tracking-[0.16em] uppercase px-3.5 py-1.5 rounded-full shadow-lg border pointer-events-none flex items-center gap-1.5 transition-all ${
                         showHoldHint
-                          ? 'bg-rust border-champagne text-sand-light shadow-xl'
-                          : 'bg-espresso/90 border-champagne/60'
+                          ? 'bg-[#3E523B] border-champagne text-sand-light shadow-xl'
+                          : 'bg-[#2E3D2C]/95 border-champagne/80 text-alabaster shadow-md backdrop-blur-sm'
                       }`}
                     >
-                      <Sparkles className="w-3 h-3 text-champagne animate-spin" style={{ animationDuration: '6s' }} />
+                      <Sparkles
+                        className={`w-3 h-3 text-champagne ${
+                          holdProgress > 0 ? 'animate-spin' : ''
+                        }`}
+                        style={{ animationDuration: '3s' }}
+                      />
                       <span>
                         {holdProgress > 0
                           ? holdProgress >= 50
@@ -1124,11 +1055,11 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       ? { duration: 0.35, ease: 'easeInOut' }
                       : { duration: 2.8, repeat: holdProgress > 0 ? 0 : Infinity, ease: 'easeInOut' }
                   }
-                  className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform"
+                  className="relative w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform"
                 >
                   {/* Golden Charge Ring when pressing & holding */}
                   {holdProgress > 0 && (
-                    <svg className="absolute -inset-2 w-24 h-24 sm:w-28 sm:h-28 -rotate-90 pointer-events-none">
+                    <svg className="absolute -inset-2 w-24 h-24 sm:w-26 sm:h-26 -rotate-90 pointer-events-none">
                       <circle
                         cx="50%"
                         cy="50%"
@@ -1197,6 +1128,49 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 </motion.div>
               </div>
             </div>
+
+            {/* =========================================================================
+                LAYER 5 (z-45): VINTAGE POSTAGE STAMP & CANCELLATION
+                (Affixed to top-right corner of the envelope, cleanly above flap with zero collision)
+                ========================================================================= */}
+            <motion.div
+              animate={
+                isOpening
+                  ? { opacity: 0, scale: 0.85, y: -10 }
+                  : { opacity: 1, scale: stampSquash ? 0.92 : 1, y: 0 }
+              }
+              transition={{ duration: 0.18 }}
+              style={{ zIndex: 45 }}
+              className="absolute top-3 right-3.5 sm:top-3.5 sm:right-4.5 pointer-events-auto cursor-pointer group"
+              onClick={handleStampClick}
+              title="Tap stamp to stamp postal cancellation!"
+            >
+              <div className="relative w-13 h-16 sm:w-15 sm:h-18 p-1 rounded-sm bg-[#FAFBF9] border-2 border-dashed border-[#B8C7B4] shadow-md flex flex-col items-center justify-between text-center rotate-2 group-hover:rotate-0 transition-transform">
+                <div className="border border-champagne/70 w-full h-full p-0.5 flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] to-[#F2F5F0]">
+                  <span className="text-[6px] uppercase tracking-[0.18em] text-terracotta font-bold">
+                    PHILIPPINES
+                  </span>
+                  <Heart className="w-3 h-3 text-blush-rose fill-blush/40 group-hover:scale-110 transition-transform" />
+                  <span className="font-serif text-[8px] sm:text-[9.5px] font-semibold text-espresso">
+                    FOREVER 2026
+                  </span>
+                </div>
+
+                {/* Postal Ink Cancellation Stamp Overlay */}
+                <div className="absolute -left-1.5 top-0.5 w-13 h-13 sm:w-15 sm:h-15 rounded-full border border-rust/50 flex flex-col items-center justify-center -rotate-12 pointer-events-none opacity-70">
+                  <span className="text-[5px] tracking-widest uppercase font-semibold text-rust">
+                    SAN FABIAN
+                  </span>
+                  <span className="text-[6px] font-mono font-bold text-rust">
+                    21 • 12 • 26
+                  </span>
+                  <div className="w-5 h-[1px] bg-rust/50 my-0.5" />
+                  <span className="text-[4.5px] tracking-wider text-rust">
+                    STAMP #{stampClicks}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>

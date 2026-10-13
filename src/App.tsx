@@ -107,12 +107,6 @@ export function App() {
           isEnvelopeOpen ? 'opacity-100' : 'opacity-0 h-screen overflow-hidden pointer-events-none'
         }`}
       >
-        <FloatingNav
-          isPlayingMusic={isPlayingMusic}
-          onToggleMusic={handleToggleMusic}
-          onReplayEnvelope={handleReplayEnvelope}
-        />
-
         {isMinimalDesign ? (
           <main>
             <MinimalInvitationView />
@@ -134,6 +128,12 @@ export function App() {
             <FooterSection />
           </>
         )}
+
+        <FloatingNav
+          isPlayingMusic={isPlayingMusic}
+          onToggleMusic={handleToggleMusic}
+          onReplayEnvelope={handleReplayEnvelope}
+        />
       </div>
     </div>
   );

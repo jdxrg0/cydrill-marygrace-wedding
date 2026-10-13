@@ -58,6 +58,37 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
     }
   }, [isPlayingMusic]);
 
+  // Prevent background scrolling when Chapters Menu modal is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      const originalBodyTouchAction = document.body.style.touchAction;
+
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      // Prevent non-passive touchmove scrolling on window/body while menu is open
+      const preventTouchMove = (e: TouchEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (target && target.closest('.allow-scroll')) {
+          return;
+        }
+        e.preventDefault();
+      };
+
+      window.addEventListener('touchmove', preventTouchMove, { passive: false });
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.touchAction = originalBodyTouchAction;
+        window.removeEventListener('touchmove', preventTouchMove);
+      };
+    }
+  }, [isMenuOpen]);
+
   // Find active lyric index based on current audio playback time
   const activeLyricIndex = useMemo(() => {
     let idx = 0;
@@ -90,7 +121,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.96 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed bottom-20 left-3 right-3 sm:left-auto sm:right-6 z-40 sm:w-96 bg-alabaster border-2 border-blush rounded-3xl shadow-2xl p-4 sm:p-5 paper-grain"
+            className="fixed bottom-20 right-3 sm:right-6 z-[60] w-[calc(100vw-24px)] sm:w-96 bg-alabaster border-2 border-blush rounded-3xl shadow-2xl p-4 sm:p-5 paper-grain"
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-sand">
@@ -117,38 +148,40 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               </button>
             </div>
 
-            {/* 3-Line Karaoke Synced Stage (Previous, Current, Next) */}
-            <div className="py-4 px-1 text-center space-y-2.5 min-h-[116px] flex flex-col justify-center">
+            {/* 3-Line Karaoke Synced Stage (Previous, Current, Next) - Fixed Height Stage */}
+            <div className="py-2 px-1 text-center h-32 flex flex-col justify-between overflow-hidden">
               {/* Previous Line */}
               <button
                 type="button"
                 disabled={!prevLyric}
                 onClick={() => prevLyric && soundManager.seek(prevLyric.time)}
-                className="text-xs font-serif italic text-espresso/50 hover:text-espresso/80 transition-colors line-clamp-1 disabled:pointer-events-none"
+                className="text-xs font-serif italic text-espresso/50 hover:text-espresso/80 transition-colors line-clamp-1 h-5 flex items-center justify-center disabled:pointer-events-none"
               >
                 {prevLyric ? prevLyric.text : ' '}
               </button>
 
               {/* Active Highlighted Line */}
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={activeLyricIndex}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25 }}
-                  className="font-serif text-base sm:text-lg font-bold text-terracotta leading-snug px-2"
-                >
-                  “{currentLyric.text}”
-                </motion.p>
-              </AnimatePresence>
+              <div className="h-14 flex items-center justify-center overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={activeLyricIndex}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="font-serif text-sm sm:text-base font-bold text-terracotta leading-snug px-2 line-clamp-2"
+                  >
+                    “{currentLyric.text}”
+                  </motion.p>
+                </AnimatePresence>
+              </div>
 
               {/* Next Upcoming Line */}
               <button
                 type="button"
                 disabled={!nextLyric}
                 onClick={() => nextLyric && soundManager.seek(nextLyric.time)}
-                className="text-xs font-serif italic text-espresso/50 hover:text-espresso/80 transition-colors line-clamp-1 disabled:pointer-events-none"
+                className="text-xs font-serif italic text-espresso/50 hover:text-espresso/80 transition-colors line-clamp-1 h-5 flex items-center justify-center disabled:pointer-events-none"
               >
                 {nextLyric ? nextLyric.text : ' '}
               </button>
@@ -177,7 +210,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
       </AnimatePresence>
 
       {/* UNIFIED FLOATING DOCK (Bottom-Right on All Screen Sizes): Syncing Lyrics Pill + Mute Button + Menu */}
-      <div className="fixed bottom-4 sm:bottom-5 left-3 right-3 sm:left-auto sm:right-6 z-40 flex items-center justify-end gap-2 pointer-events-none">
+      <div className="fixed bottom-4 sm:bottom-5 right-3 sm:right-6 z-[60] flex items-center justify-end gap-2 max-w-[calc(100vw-24px)] pointer-events-auto">
         {/* LIVE SYNCING LYRICS PILL ALONGSIDE THE MUTE BUTTON (100% Solid Opaque) */}
         <AnimatePresence>
           {isPlayingMusic && (
@@ -187,19 +220,23 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 16, scale: 0.92 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              onClick={() => setIsLyricsCardOpen((prev) => !prev)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLyricsCardOpen((prev) => !prev);
+              }}
               title="Click to expand live synced lyrics"
-              className="pointer-events-auto relative overflow-hidden flex-1 sm:flex-initial max-w-[calc(100vw-124px)] sm:max-w-xs md:max-w-sm h-11 px-3.5 rounded-full bg-alabaster hover:bg-sand-light text-espresso border border-blush shadow-xl flex items-center gap-2.5 text-left transition-all active:scale-95"
+              aria-label="Expand live synced lyrics"
+              className="relative overflow-hidden w-[calc(100vw-132px)] sm:w-72 md:w-80 shrink-0 h-11 px-3.5 rounded-full bg-alabaster hover:bg-sand-light text-espresso border border-blush shadow-xl flex items-center gap-2.5 text-left transition-all active:scale-95 cursor-pointer select-none"
             >
               {/* Animated Mini Equalizer Bars */}
-              <span className="flex items-end gap-[2px] h-3.5 shrink-0" aria-hidden="true">
+              <span className="flex items-end gap-[2px] h-3.5 shrink-0 pointer-events-none" aria-hidden="true">
                 <span className="w-[2.5px] bg-terracotta rounded-full animate-[pulse_0.9s_ease-in-out_infinite] h-3.5" />
                 <span className="w-[2.5px] bg-blush-rose rounded-full animate-[pulse_1.3s_ease-in-out_infinite] h-2" />
                 <span className="w-[2.5px] bg-terracotta rounded-full animate-[pulse_0.7s_ease-in-out_infinite] h-3" />
               </span>
 
               {/* Smoothly Cross-Fading Synced Lyric Line */}
-              <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="flex-1 min-w-0 overflow-hidden pointer-events-none">
                 <AnimatePresence mode="wait">
                   <motion.p
                     key={activeLyricIndex}
@@ -216,7 +253,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
 
               {/* Expand Chevron Indicator */}
               <ChevronUp
-                className={`w-3.5 h-3.5 text-terracotta shrink-0 transition-transform duration-200 ${
+                className={`w-3.5 h-3.5 text-terracotta shrink-0 pointer-events-none transition-transform duration-200 ${
                   isLyricsCardOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -224,65 +261,47 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               {/* Subtle Bottom Song Progress Bar */}
               <span
                 style={{ width: `${progressPercent}%` }}
-                className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-terracotta via-blush-rose to-champagne transition-all duration-300"
+                className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-terracotta via-blush-rose to-champagne transition-all duration-300 pointer-events-none"
               />
             </motion.button>
           )}
         </AnimatePresence>
 
         {/* Mute / Unmute Toggle Button (Circular Icon-Only) */}
-        <motion.button
-          layout
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        <button
           type="button"
-          onClick={onToggleMusic}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleMusic();
+          }}
           title={`${isPlayingMusic ? 'Mute' : 'Play'} ${music.displayLabel}`}
           aria-label={`${isPlayingMusic ? 'Mute' : 'Play'} ${music.displayLabel}`}
-          className={`pointer-events-auto flex items-center justify-center rounded-full w-11 h-11 shadow-xl border transition-colors duration-300 active:scale-95 shrink-0 ${
+          className={`flex items-center justify-center rounded-full w-11 h-11 shadow-xl border transition-all duration-200 active:scale-95 shrink-0 cursor-pointer ${
             isPlayingMusic
               ? 'bg-terracotta text-alabaster border-terracotta-light'
               : 'bg-alabaster text-espresso border-champagne'
           }`}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {isPlayingMusic ? (
-              <motion.span
-                key="playing"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
-                className="inline-flex items-center justify-center"
-              >
-                <Volume2 className="w-4 h-4 animate-pulse" />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="muted"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
-                className="inline-flex items-center justify-center"
-              >
-                <VolumeX className="w-4 h-4 text-terracotta" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
+          {isPlayingMusic ? (
+            <Volume2 className="w-4 h-4 animate-pulse pointer-events-none" />
+          ) : (
+            <VolumeX className="w-4 h-4 text-terracotta pointer-events-none" />
+          )}
+        </button>
 
         {/* Editorial "Chapters" Menu Button (Circular Icon-Only) */}
-        <motion.button
-          layout
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        <button
           type="button"
-          onClick={() => setIsMenuOpen(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMenuOpen(true);
+          }}
           title="Open invitation chapters menu"
           aria-label="Open invitation chapters menu"
-          className="pointer-events-auto flex items-center justify-center w-11 h-11 rounded-full bg-espresso hover:bg-espresso/95 text-sand-light border border-champagne/50 shadow-xl transition-colors active:scale-95 shrink-0"
+          className="flex items-center justify-center w-11 h-11 rounded-full bg-espresso hover:bg-espresso/95 text-sand-light border border-champagne/50 shadow-xl transition-all duration-200 active:scale-95 shrink-0 cursor-pointer"
         >
-          <Menu className="w-4 h-4 text-blush" />
-        </motion.button>
+          <Menu className="w-4 h-4 text-blush pointer-events-none" />
+        </button>
       </div>
 
       {/* EDITORIAL CHAPTERS MODAL / BOTTOM SHEET (Works on Both Mobile & Desktop!) */}
@@ -294,7 +313,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={() => setIsMenuOpen(false)}
-            className="fixed inset-0 z-50 bg-espresso/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+            className="fixed inset-0 z-[70] bg-espresso/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 touch-none overscroll-none"
           >
             <motion.div
               initial={{ y: '100%', opacity: 0.5 }}
@@ -302,7 +321,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 26, stiffness: 260 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-alabaster paper-grain rounded-t-3xl sm:rounded-3xl border-t-2 sm:border-2 border-champagne/60 shadow-2xl px-6 pt-6 pb-8 relative overflow-hidden"
+              className="w-full max-w-md max-h-[88vh] overflow-y-auto overscroll-contain allow-scroll bg-alabaster paper-grain rounded-t-3xl sm:rounded-3xl border-t-2 sm:border-2 border-champagne/60 shadow-2xl px-6 pt-6 pb-8 relative"
             >
               {/* Top Drag Handle & Close Button */}
               <div className="w-12 h-1 rounded-full bg-sand-dark/60 mx-auto mb-4 sm:hidden" />
