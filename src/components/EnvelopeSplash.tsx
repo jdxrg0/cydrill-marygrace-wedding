@@ -252,17 +252,12 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     // Flap folds backward
     setTimeout(() => {
       setStage('flap-open');
-    }, 320);
+    }, 300);
 
-    // Card begins to glide out of pocket
-    setTimeout(() => {
-      setStage('card-peeking');
-    }, 600);
-
-    // Card automatically glides up into full presented glory!
+    // Card smoothly glides out into full presentation
     setTimeout(() => {
       handleRevealCard();
-    }, 1100);
+    }, 620);
   };
 
   // Action: Reveal the card to presented state (drag or tap)
@@ -726,9 +721,12 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                   style={{
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
+                    opacity: isCardFlipped ? 0 : 1,
+                    zIndex: isCardFlipped ? 1 : 2,
                     pointerEvents: isCardFlipped ? 'none' : 'auto',
+                    transition: 'opacity 0.25s ease-in-out',
                   }}
-                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center"
                 >
                   <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4]">
                     <div className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-champagne/80" />
@@ -738,21 +736,21 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
 
                     {/* Card Top */}
                     <div className="w-full">
-                      <div className="flex items-center justify-center gap-2 mb-0.5">
-                        <span className="h-[1px] w-5 bg-champagne/50" />
-                        <span className="text-[8px] sm:text-[9.5px] uppercase tracking-[0.32em] text-terracotta font-semibold">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <span className="h-[1px] w-6 bg-champagne/60" />
+                        <span className="text-[8.5px] sm:text-[10px] uppercase tracking-[0.35em] text-terracotta font-semibold">
                           Save The Date
                         </span>
-                        <span className="h-[1px] w-5 bg-champagne/50" />
+                        <span className="h-[1px] w-6 bg-champagne/60" />
                       </div>
-                      <h2 className="font-serif text-base sm:text-2xl font-semibold tracking-wide text-espresso uppercase leading-snug">
+                      <h2 className="font-serif text-lg sm:text-2xl md:text-3xl font-semibold tracking-wide text-espresso uppercase leading-snug">
                         {couple.displayTitle}
                       </h2>
                     </div>
 
-                    {/* Card Middle: Couple Cameo Photo */}
-                    <div className="my-0.5 flex items-center justify-center gap-2.5">
-                      <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0">
+                    {/* Card Middle: Couple Cameo Portrait & Date */}
+                    <div className="my-1 flex items-center justify-center gap-3 sm:gap-4 px-2">
+                      <div className="relative w-15 h-15 sm:w-20 sm:h-20 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0 ring-2 ring-champagne/40 ring-offset-1">
                         <img
                           src="/photos/grace-cydrill.jpg"
                           alt="Cydrill and Mary Grace"
@@ -763,13 +761,13 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                         />
                       </div>
                       <div className="text-left">
-                        <p className="text-[9px] sm:text-[11px] font-semibold tracking-[0.2em] text-rust uppercase">
+                        <p className="text-[9.5px] sm:text-xs font-semibold tracking-[0.22em] text-rust uppercase">
                           {schedule.dayOfWeek}
                         </p>
-                        <p className="text-[11px] sm:text-sm font-serif font-bold tracking-wider text-espresso">
+                        <p className="text-xs sm:text-base font-serif font-bold tracking-wider text-espresso">
                           {schedule.dateFormatted}
                         </p>
-                        <p className="text-[8.5px] sm:text-[10px] text-espresso/70">
+                        <p className="text-[9px] sm:text-[11px] text-espresso/70 mt-0.5">
                           {schedule.timeFormatted}
                         </p>
                       </div>
@@ -777,19 +775,19 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
 
                     {/* Card Bottom: Venue & Interactive Controls */}
                     <div className="w-full">
-                      <p className="text-[8.5px] sm:text-[10.5px] text-espresso/80 font-medium tracking-wide">
+                      <p className="text-[9px] sm:text-[11px] text-espresso/80 font-medium tracking-wide">
                         {location.venueName} • {location.addressLine2}
                       </p>
 
-                      <div className="mt-1.5 flex items-center justify-center gap-2">
+                      <div className="mt-2 flex items-center justify-center gap-2 sm:gap-3">
                         {stage === 'card-presented' && (
                           <button
                             type="button"
                             onClick={handleFlipCard}
-                            className="px-2.5 py-1 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9px] sm:text-[10.5px] font-medium tracking-wider border border-terracotta/25 flex items-center gap-1 transition-all"
+                            className="px-3 py-1.5 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9.5px] sm:text-xs font-medium tracking-wider border border-terracotta/25 flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
                             title="Flip card to read personal note and add to calendar"
                           >
-                            <RotateCw className="w-2.5 h-2.5 text-terracotta" />
+                            <RotateCw className="w-3 h-3 text-terracotta" />
                             <span>Flip to Note ↺</span>
                           </button>
                         )}
@@ -798,7 +796,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           <button
                             type="button"
                             onClick={handleProceed}
-                            className="py-1 px-3.5 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9px] sm:text-[11px] font-semibold tracking-[0.16em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
+                            className="py-1.5 px-4 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9.5px] sm:text-xs font-semibold tracking-[0.18em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
                           >
                             <span className="relative z-10">Step Inside</span>
                             <ArrowRight className="w-3.5 h-3.5 relative z-10" />
@@ -933,10 +931,13 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               <motion.div
                 animate={
                   isOpening
-                    ? { opacity: 0, scaleX: 1.05 }
+                    ? {
+                        opacity: stage === 'card-presented' ? 0.65 : 0,
+                        scaleX: stage === 'card-presented' ? 1 : 1.05,
+                      }
                     : { opacity: 1, scaleX: 1 }
                 }
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.35 }}
                 className="absolute inset-x-0 bottom-2.5 sm:bottom-3.5 h-20 sm:h-24 z-20 pointer-events-auto bg-[#FAFBF9]/45 backdrop-blur-md border-y border-[#C8A97E]/40 shadow-[0_2px_12px_rgba(34,43,35,0.04)] flex items-center justify-center px-4 sm:px-8"
               >
                 {/* Thin gold foil pinstripe top and bottom */}
