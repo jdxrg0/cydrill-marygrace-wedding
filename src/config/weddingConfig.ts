@@ -91,32 +91,32 @@ export const weddingConfig = {
 
   // 1B. BACKGROUND MUSIC & SCRIPTURE REFLECTIONS
   music: {
-    title: 'Christian Wedding Instrumental',
-    artist: 'Piano & Strings',
-    displayLabel: '“Christian Wedding Song” (Instrumental)',
-    audioUrl: '/audio/i-prayed-for-you.mp3',
-    youtubeUrl: 'https://www.youtube.com/watch?v=szqDUd63c94',
+    title: 'Goodness of God',
+    artist: 'Piano & Cello Instrumental',
+    displayLabel: '“Goodness of God” (Piano & Cello)',
+    audioUrl: '/audio/goodness-of-god-piano-cello.mp3',
+    youtubeUrl: 'https://www.youtube.com/watch?v=hmDb8oq8osI',
     lyrics: [
-      { time: 0.0, text: '♪ Christian Wedding Song (Instrumental) ♪' },
+      { time: 0.0, text: '♪ Goodness of God • Piano & Cello Instrumental ♪' },
       {
         time: 18.0,
-        text: '“For this prayer I prayed, and the Lord has granted what I asked of Him.” — 1 Samuel 1:27',
+        text: '“I love You, Lord, for Your mercy never fails me; all my days, I’ve been held in Your hands.”',
       },
       {
         time: 55.0,
-        text: '“Love is patient, love is kind. It always protects, always trusts, always hopes, always perseveres.” — 1 Corinthians 13:4-7',
+        text: '“From the moment that I wake up until I lay my head, oh, I will sing of the goodness of God.”',
       },
       {
         time: 95.0,
-        text: '“A cord of three strands is not quickly broken.” — Ecclesiastes 4:12',
+        text: '“All my life You have been faithful, and all my life You have been so, so good.”',
       },
       {
         time: 135.0,
-        text: '“I have found the one whom my soul loves.” — Song of Solomon 3:4',
+        text: '“With every breath that I am able, oh, I will sing of the goodness of God.”',
       },
       {
         time: 175.0,
-        text: '“Two souls made one by God’s boundless grace.”',
+        text: '“Your goodness is running after, it’s running after me.”',
       },
       {
         time: 210.0,

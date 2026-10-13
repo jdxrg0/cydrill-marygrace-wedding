@@ -2,7 +2,7 @@ import { weddingConfig } from '../config/weddingConfig';
 
 /**
  * Wedding Music & Synced Lyrics Audio Manager
- * Plays "I Prayed For You" by Clash bae (/audio/i-prayed-for-you.mp3)
+ * Plays "Goodness of God" (Piano & Cello Instrumental) (/audio/goodness-of-god-piano-cello.mp3)
  * with smooth volume fade-in, live playback timestamp tracking, and iOS gesture support.
  */
 

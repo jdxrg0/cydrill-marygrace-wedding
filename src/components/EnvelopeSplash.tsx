@@ -817,9 +817,12 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     WebkitBackfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
                     WebkitTransform: 'rotateY(180deg)',
+                    opacity: isCardFlipped ? 1 : 0,
+                    zIndex: isCardFlipped ? 2 : 1,
                     pointerEvents: isCardFlipped ? 'auto' : 'none',
+                    transition: 'opacity 0.25s ease-in-out',
                   }}
-                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center"
                 >
                   <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative">
                     <div className="w-full">
@@ -867,23 +870,25 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-center gap-2 mt-0.5">
+                      <div className="mt-1 flex items-center justify-center gap-2 sm:gap-3">
                         <button
                           type="button"
                           onClick={handleFlipCard}
-                          className="px-2 py-0.5 rounded-full text-[8.5px] sm:text-[10px] text-espresso/70 hover:text-espresso flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9.5px] sm:text-xs font-medium tracking-wider border border-terracotta/25 flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
+                          title="Flip back to front invitation"
                         >
-                          <RotateCw className="w-2.5 h-2.5" />
+                          <RotateCw className="w-3 h-3 text-terracotta" />
                           <span>Front Side ↻</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={handleProceed}
-                          className="py-1 px-3 rounded-full bg-terracotta text-alabaster text-[9px] sm:text-[10.5px] font-semibold tracking-wider uppercase shadow-sm hover:brightness-110 flex items-center gap-1"
+                          className="py-1.5 px-4 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9.5px] sm:text-xs font-semibold tracking-[0.18em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
                         >
-                          <span>Enter Celebration</span>
-                          <ArrowRight className="w-3 h-3" />
+                          <span className="relative z-10">Step Inside</span>
+                          <ArrowRight className="w-3.5 h-3.5 relative z-10" />
+                          <div className="absolute inset-0 animate-shimmer-sweep pointer-events-none" />
                         </button>
                       </div>
                     </div>
