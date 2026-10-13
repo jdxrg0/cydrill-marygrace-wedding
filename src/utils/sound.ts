@@ -1,9 +1,9 @@
 import { weddingConfig } from '../config/weddingConfig';
 
 /**
- * Wedding Music & Synced Lyrics Audio Manager
+ * Wedding Background Music & Sound Effects Audio Manager
  * Plays "Goodness of God" (Piano & Cello Instrumental) (/audio/goodness-of-god-piano-cello.mp3)
- * with smooth volume fade-in, live playback timestamp tracking, and iOS gesture support.
+ * with smooth volume fade-in and iOS touch gesture unlocking support.
  */
 
 type TimeUpdateListener = (currentTime: number, duration: number) => void;
@@ -51,6 +51,7 @@ class WeddingMusicManager {
   }
 
   private notifyListeners() {
+    if (this.listeners.size === 0) return;
     const current = this.getCurrentTime();
     const duration = this.getDuration();
     this.listeners.forEach((cb) => cb(current, duration));
@@ -58,11 +59,12 @@ class WeddingMusicManager {
 
   private startSyncLoop() {
     this.stopSyncLoop();
+    if (this.listeners.size === 0) return;
     this.syncIntervalId = window.setInterval(() => {
       if (this.isPlaying) {
         this.notifyListeners();
       }
-    }, 150);
+    }, 250);
   }
 
   private stopSyncLoop() {
@@ -75,8 +77,14 @@ class WeddingMusicManager {
   public subscribeTime(listener: TimeUpdateListener): () => void {
     this.listeners.add(listener);
     listener(this.getCurrentTime(), this.getDuration());
+    if (this.isPlaying && this.syncIntervalId === null) {
+      this.startSyncLoop();
+    }
     return () => {
       this.listeners.delete(listener);
+      if (this.listeners.size === 0) {
+        this.stopSyncLoop();
+      }
     };
   }
 

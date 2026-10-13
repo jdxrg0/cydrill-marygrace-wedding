@@ -63,11 +63,6 @@ export interface GuestWish {
   createdAt: string;
 }
 
-export interface LyricLine {
-  time: number; // Start time in seconds
-  text: string;
-}
-
 export const weddingConfig = {
   // 1. COUPLE DETAILS
   couple: {
@@ -89,40 +84,13 @@ export const weddingConfig = {
       '“And over all these virtues put on love, which binds them all together in perfect unity.” — Colossians 3:14',
   },
 
-  // 1B. BACKGROUND MUSIC & SCRIPTURE REFLECTIONS
+  // 1B. BACKGROUND MUSIC & SOUNDTRACK
   music: {
     title: 'Goodness of God',
     artist: 'Piano & Cello Instrumental',
     displayLabel: '“Goodness of God” (Piano & Cello)',
     audioUrl: '/audio/goodness-of-god-piano-cello.mp3',
     youtubeUrl: 'https://www.youtube.com/watch?v=hmDb8oq8osI',
-    lyrics: [
-      { time: 0.0, text: '♪ Goodness of God • Piano & Cello Instrumental ♪' },
-      {
-        time: 18.0,
-        text: '“I love You, Lord, for Your mercy never fails me; all my days, I’ve been held in Your hands.”',
-      },
-      {
-        time: 55.0,
-        text: '“From the moment that I wake up until I lay my head, oh, I will sing of the goodness of God.”',
-      },
-      {
-        time: 95.0,
-        text: '“All my life You have been faithful, and all my life You have been so, so good.”',
-      },
-      {
-        time: 135.0,
-        text: '“With every breath that I am able, oh, I will sing of the goodness of God.”',
-      },
-      {
-        time: 175.0,
-        text: '“Your goodness is running after, it’s running after me.”',
-      },
-      {
-        time: 210.0,
-        text: '♪ Cydrill and Mary Grace • December 21, 2026 ♪',
-      },
-    ] as LyricLine[],
   },
 
   // 2. DATE & TIME DETAILS

@@ -55,7 +55,7 @@ export const FooterSection: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Full-Width Closing Couple Portrait Banner (With extra bottom padding on mobile so the floating lyrics/menu dock never overlaps text) */}
+      {/* Full-Width Closing Couple Portrait Banner (With extra bottom padding on mobile so the floating audio/menu dock never overlaps text) */}
       <div className="relative w-full h-[380px] sm:h-[480px] overflow-hidden">
         <img
           src={photos.footerBanner}
