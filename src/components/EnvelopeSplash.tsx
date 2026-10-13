@@ -1041,39 +1041,68 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               }`}
             >
               <div className="relative flex flex-col items-center" ref={sealRef}>
-                {/* Floating Hint Pill (Soft, luxury palette) */}
+                {/* Artisan Handwritten Calligraphy Instruction & Curved Arrow Pointing to Wax Seal */}
                 <AnimatePresence>
                   {stage === 'idle' && (
                     <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        scale: showHoldHint ? [1, 1.08, 1] : 1,
-                      }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.25 }}
-                      className={`absolute -top-11 whitespace-nowrap text-alabaster text-[9px] sm:text-[10px] font-sans font-medium tracking-[0.16em] uppercase px-3.5 py-1.5 rounded-full shadow-lg border pointer-events-none flex items-center gap-1.5 transition-all ${
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={
                         showHoldHint
-                          ? 'bg-[#3E523B] border-champagne text-sand-light shadow-xl'
-                          : 'bg-[#2E3D2C]/95 border-champagne/80 text-alabaster shadow-md backdrop-blur-sm'
-                      }`}
+                          ? { opacity: 1, y: 0, scale: [1, 1.06, 1], rotate: [-2, 2, -2, 0] }
+                          : { opacity: 1, y: [0, -3, 0], scale: 1 }
+                      }
+                      exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                      transition={
+                        showHoldHint
+                          ? { duration: 0.35, ease: 'easeInOut' }
+                          : { y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' } }
+                      }
+                      className="absolute -top-14 sm:-top-16 flex flex-col items-center pointer-events-none select-none z-30"
                     >
-                      <Sparkles
-                        className={`w-3 h-3 text-champagne ${
-                          holdProgress > 0 ? 'animate-spin' : ''
+                      {/* Calligraphic note or progress readout */}
+                      <span
+                        className={`transition-colors drop-shadow-sm whitespace-nowrap ${
+                          holdProgress > 0
+                            ? 'font-sans text-[10px] sm:text-xs uppercase tracking-[0.22em] text-terracotta-dark font-bold bg-alabaster/80 px-2.5 py-0.5 rounded-full border border-champagne/50 shadow-sm'
+                            : showHoldHint
+                            ? 'font-serif text-xs sm:text-sm italic font-semibold text-terracotta-dark'
+                            : 'font-script text-xl sm:text-2xl text-espresso/90 font-medium -rotate-2'
                         }`}
-                        style={{ animationDuration: '3s' }}
-                      />
-                      <span>
+                      >
                         {holdProgress > 0
                           ? holdProgress >= 50
                             ? `Breaking... ${holdProgress}%`
                             : `Melting... ${holdProgress}%`
                           : showHoldHint
-                          ? 'Tap and hold to break seal!'
+                          ? 'Hold down to break seal!'
                           : 'Tap & hold to break seal'}
                       </span>
+
+                      {/* Delicate Curved Arrow pointing down to the wax seal */}
+                      <svg
+                        width="34"
+                        height="26"
+                        viewBox="0 0 34 26"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`transition-colors drop-shadow-sm -mt-0.5 ${
+                          holdProgress > 0 ? 'text-champagne' : 'text-espresso/70'
+                        }`}
+                      >
+                        <path
+                          d="M 8 2 C 16 3, 24 7, 22 19"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M 16 15 L 21.5 20 L 26 14.5"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </motion.div>
                   )}
                 </AnimatePresence>
