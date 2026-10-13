@@ -344,6 +344,7 @@ export const weddingConfig = {
   // 8. PHOTOGRAPHY & GALLERY (All 46 Studio Prenup Portraits)
   photos: {
     heroPortrait: '/photos/grace-cydrill-enhanced-01.jpg',
+    cameoPortrait: '/photos/grace-cydrill-04.jpg',
     heroSlides: [
       '/photos/grace-cydrill-enhanced-01.jpg',
       '/photos/grace-cydrill-04.jpg',

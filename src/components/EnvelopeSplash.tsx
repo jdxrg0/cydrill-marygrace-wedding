@@ -147,8 +147,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const holdStartTimeRef = useRef<number>(0);
   const quickTapCountRef = useRef<number>(0);
 
-  // Stamp click count and feedback animation
-  const [stampClicks, setStampClicks] = useState(1);
+  // Stamp click feedback animation
   const [stampSquash, setStampSquash] = useState(false);
 
   // Recipient Personalization
@@ -160,7 +159,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const sealRef = useRef<HTMLDivElement | null>(null);
   const autoProceedTimerRef = useRef<number | null>(null);
 
-  const { couple, schedule, location, music } = weddingConfig;
+  const { couple, schedule, location, music, photos } = weddingConfig;
   const isStationery = variant === 'stationery';
   const isOpening = stage !== 'idle';
   const isFlapBehindCard =
@@ -397,7 +396,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     e.stopPropagation();
     soundManager.playStampSound();
     setStampSquash(true);
-    setStampClicks((prev) => prev + 1);
 
     confetti({
       particleCount: 16,
@@ -781,9 +779,10 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     <div className="my-1 flex items-center justify-center gap-3 sm:gap-4 px-2">
                       <div className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0 ring-2 ring-champagne/40 ring-offset-1">
                         <img
-                          src="/photos/grace-cydrill.jpg"
-                          alt="Cydrill and Mary Grace"
-                          className="w-full h-full object-cover object-center rounded-full"
+                          src={photos.cameoPortrait || '/photos/grace-cydrill-04.jpg'}
+                          alt={couple.displayTitle}
+                          className="w-full h-full object-cover rounded-full"
+                          style={{ objectPosition: 'center 6%' }}
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
@@ -1075,7 +1074,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                             : `Melting... ${holdProgress}%`
                           : showHoldHint
                           ? 'Hold down to break seal!'
-                          : 'Tap & hold to break seal'}
+                          : 'Press & hold to open'}
                       </span>
 
                       {/* Delicate Curved Arrow pointing down to the wax seal */}
@@ -1204,44 +1203,167 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             </div>
 
             {/* =========================================================================
-                LAYER 5 (z-45): VINTAGE POSTAGE STAMP & CANCELLATION
-                (Affixed to top-right corner of the envelope, cleanly above flap with zero collision)
+                LAYER 5 (z-45): LUXURY VINTAGE POSTAGE STAMP & AUTHENTIC POSTMARK
+                (Authentic philatelic cancellation with perforated serrated edges & zero text collision)
                 ========================================================================= */}
             <motion.div
               animate={
                 isOpening
                   ? { opacity: 0, scale: 0.85, y: -10 }
-                  : { opacity: 1, scale: stampSquash ? 0.92 : 1, y: 0 }
+                  : { opacity: 1, scale: stampSquash ? 0.93 : 1, y: 0 }
               }
-              transition={{ duration: 0.18 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               style={{ zIndex: 45 }}
-              className="absolute top-3 right-3.5 sm:top-3.5 sm:right-4.5 pointer-events-auto cursor-pointer group"
+              className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-4 pointer-events-auto cursor-pointer group select-none"
               onClick={handleStampClick}
-              title="Tap stamp to stamp postal cancellation!"
+              title="Tap stamp for postal ink cancellation!"
             >
-              <div className="relative w-12 h-16 sm:w-14 sm:h-20 p-1 rounded-sm bg-[#FAFBF9] border-2 border-dashed border-[#B8C7B4] shadow-md flex flex-col items-center justify-between text-center rotate-2 group-hover:rotate-0 transition-transform">
-                <div className="border border-champagne/70 w-full h-full p-0.5 flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] to-[#F2F5F0]">
-                  <span className="text-[6px] uppercase tracking-[0.18em] text-terracotta font-bold">
-                    PHILIPPINES
-                  </span>
-                  <Heart className="w-3 h-3 text-blush-rose fill-blush/40 group-hover:scale-110 transition-transform" />
-                  <span className="font-serif text-[8px] sm:text-[9.5px] font-semibold text-espresso">
-                    FOREVER 2026
-                  </span>
+              {/* Overall Stamp Assembly with subtle romantic tilt */}
+              <div className="relative rotate-2 group-hover:rotate-0 transition-transform duration-300">
+                {/* 1. AUTHENTIC POSTMARK CANCELLATION (CDS on envelope + wavy killer lines resting above text) */}
+                <div className="absolute -left-[38px] sm:-left-[44px] -top-2 sm:-top-2.5 pointer-events-none z-20">
+                  {/* Circular Date Postmark (CDS) on envelope paper */}
+                  <div className="relative w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] rounded-full border-[1.2px] border-rust/55 flex flex-col items-center justify-center text-center -rotate-12 bg-transparent shadow-[inset_0_0_6px_rgba(62,82,59,0.03)] opacity-85">
+                    {/* Inner dashed ring */}
+                    <div className="absolute inset-0.5 rounded-full border border-dashed border-rust/40" />
+
+                    {/* Postal Location */}
+                    <span className="text-[5px] sm:text-[6px] tracking-[0.18em] uppercase font-bold text-rust relative z-10 whitespace-nowrap">
+                      SAN FABIAN
+                    </span>
+
+                    {/* Wedding Date in Postal Ink */}
+                    <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold text-rust tracking-wider my-0.5 relative z-10 whitespace-nowrap">
+                      21•12•26
+                    </span>
+
+                    {/* Postal Province */}
+                    <span className="text-[4.5px] sm:text-[5px] uppercase tracking-[0.16em] text-rust/80 font-medium relative z-10 whitespace-nowrap">
+                      PANGASINAN
+                    </span>
+                  </div>
+
+                  {/* Wavy Postal Cancellation Killer Bars extending across top margin (above PHILIPPINES) */}
+                  <svg
+                    viewBox="0 0 46 14"
+                    className="absolute left-[36px] sm:left-[42px] top-1 sm:top-1.5 w-11 h-3.5 sm:w-13 sm:h-4 text-rust/40 pointer-events-none opacity-75"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      d="M 0 3 Q 11.5 0, 23 3 T 46 3"
+                      strokeWidth="1.1"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 0 9 Q 11.5 6, 23 9 T 46 9"
+                      strokeWidth="1.1"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </div>
 
-                {/* Postal Ink Cancellation Stamp Overlay */}
-                <div className="absolute -left-1.5 top-0.5 w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-rust/50 flex flex-col items-center justify-center -rotate-12 pointer-events-none opacity-70">
-                  <span className="text-[5px] tracking-widest uppercase font-semibold text-rust">
-                    SAN FABIAN
-                  </span>
-                  <span className="text-[6px] font-mono font-bold text-rust">
-                    21 • 12 • 26
-                  </span>
-                  <div className="w-5 h-[1px] bg-rust/50 my-0.5" />
-                  <span className="text-[4.5px] tracking-wider text-rust">
-                    STAMP #{stampClicks}
-                  </span>
+                {/* 2. THE POSTAGE STAMP WITH AUTHENTIC SERRATED PERFORATIONS */}
+                <div className="relative w-[72px] h-[98px] sm:w-[82px] sm:h-[110px] drop-shadow-[0_4px_10px_rgba(34,43,35,0.14)] filter">
+                  {/* SVG Perforated Stamp Base */}
+                  <svg
+                    viewBox="0 0 72 98"
+                    className="absolute inset-0 w-full h-full overflow-visible"
+                  >
+                    <defs>
+                      <mask id="stampPerforationHoles">
+                        {/* Solid white base */}
+                        <rect width="72" height="98" fill="white" />
+
+                        {/* Top edge circular punch holes (y=0) */}
+                        <circle cx="8" cy="0" r="2.4" fill="black" />
+                        <circle cx="16" cy="0" r="2.4" fill="black" />
+                        <circle cx="24" cy="0" r="2.4" fill="black" />
+                        <circle cx="32" cy="0" r="2.4" fill="black" />
+                        <circle cx="40" cy="0" r="2.4" fill="black" />
+                        <circle cx="48" cy="0" r="2.4" fill="black" />
+                        <circle cx="56" cy="0" r="2.4" fill="black" />
+                        <circle cx="64" cy="0" r="2.4" fill="black" />
+
+                        {/* Bottom edge circular punch holes (y=98) */}
+                        <circle cx="8" cy="98" r="2.4" fill="black" />
+                        <circle cx="16" cy="98" r="2.4" fill="black" />
+                        <circle cx="24" cy="98" r="2.4" fill="black" />
+                        <circle cx="32" cy="98" r="2.4" fill="black" />
+                        <circle cx="40" cy="98" r="2.4" fill="black" />
+                        <circle cx="48" cy="98" r="2.4" fill="black" />
+                        <circle cx="56" cy="98" r="2.4" fill="black" />
+                        <circle cx="64" cy="98" r="2.4" fill="black" />
+
+                        {/* Left edge circular punch holes (x=0) */}
+                        <circle cx="0" cy="8" r="2.4" fill="black" />
+                        <circle cx="0" cy="17" r="2.4" fill="black" />
+                        <circle cx="0" cy="26" r="2.4" fill="black" />
+                        <circle cx="0" cy="35" r="2.4" fill="black" />
+                        <circle cx="0" cy="44" r="2.4" fill="black" />
+                        <circle cx="0" cy="53" r="2.4" fill="black" />
+                        <circle cx="0" cy="62" r="2.4" fill="black" />
+                        <circle cx="0" cy="71" r="2.4" fill="black" />
+                        <circle cx="0" cy="80" r="2.4" fill="black" />
+                        <circle cx="0" cy="89" r="2.4" fill="black" />
+
+                        {/* Right edge circular punch holes (x=72) */}
+                        <circle cx="72" cy="8" r="2.4" fill="black" />
+                        <circle cx="72" cy="17" r="2.4" fill="black" />
+                        <circle cx="72" cy="26" r="2.4" fill="black" />
+                        <circle cx="72" cy="35" r="2.4" fill="black" />
+                        <circle cx="72" cy="44" r="2.4" fill="black" />
+                        <circle cx="72" cy="53" r="2.4" fill="black" />
+                        <circle cx="72" cy="62" r="2.4" fill="black" />
+                        <circle cx="72" cy="71" r="2.4" fill="black" />
+                        <circle cx="72" cy="80" r="2.4" fill="black" />
+                        <circle cx="72" cy="89" r="2.4" fill="black" />
+                      </mask>
+                    </defs>
+
+                    {/* Stamp Paper Body with Perforations */}
+                    <rect
+                      width="72"
+                      height="98"
+                      fill="#FAFBF9"
+                      mask="url(#stampPerforationHoles)"
+                    />
+                  </svg>
+
+                  {/* Stamp Face Interior with Dual Gold Foil Frame */}
+                  <div className="absolute inset-1.5 sm:inset-2 bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F3F6F2] rounded-xs border border-champagne/75 px-1 py-1 flex flex-col items-center justify-between text-center overflow-hidden">
+                    {/* Inner delicate pinstripe */}
+                    <div className="absolute inset-0.5 border border-[#C8A97E]/30 pointer-events-none" />
+
+                    {/* Top: Country Name (Spaced with breathing room below top frame) */}
+                    <div className="w-full pt-1.5 sm:pt-2 flex items-center justify-center">
+                      <span className="text-[6.5px] sm:text-[7.5px] uppercase tracking-[0.14em] text-rust font-bold block leading-none whitespace-nowrap text-center">
+                        PHILIPPINES
+                      </span>
+                    </div>
+
+                    {/* Middle: Couple Monogram & Romantic Botanical Heart */}
+                    <div className="flex flex-col items-center justify-center my-auto py-0.5">
+                      <span className="font-serif text-[14px] sm:text-[16px] font-bold tracking-widest text-espresso leading-none whitespace-nowrap">
+                        {couple.monogram}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-1 opacity-80">
+                        <span className="w-2.5 h-[0.8px] bg-champagne" />
+                        <Heart className="w-2.5 h-2.5 text-blush-rose fill-blush/60 shrink-0" />
+                        <span className="w-2.5 h-[0.8px] bg-champagne" />
+                      </div>
+                    </div>
+
+                    {/* Bottom: FOREVER & YEAR */}
+                    <div className="w-full pb-0.5">
+                      <span className="font-serif text-[8.5px] sm:text-[10px] uppercase tracking-[0.2em] font-semibold text-espresso block leading-none whitespace-nowrap">
+                        FOREVER
+                      </span>
+                      <span className="font-serif text-[7px] sm:text-[8px] tracking-wider text-rust/80 font-medium block mt-1 leading-none whitespace-nowrap">
+                        2026
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
