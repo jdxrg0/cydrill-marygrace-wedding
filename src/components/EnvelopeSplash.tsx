@@ -486,7 +486,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
 
       {/* Corner Botanicals (Subtly framed in corners so they never cut across header text) */}
       <BotanicalSprig
-        className="fixed -top-14 -left-14 sm:-top-12 sm:-left-12 w-32 h-32 sm:w-72 sm:h-72 rotate-90 opacity-20 sm:opacity-40 pointer-events-none z-[1]"
+        className="fixed -top-14 -left-14 sm:-top-12 sm:-left-12 w-32 h-32 sm:w-72 sm:h-72 rotate-90 opacity-20 sm:opacity-40 pointer-events-none z-[1] hidden sm:block"
         color={isStationery ? '#6B8467' : '#465943'}
       />
       <BotanicalSprig
@@ -497,11 +497,12 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       {/* Top Header Bar */}
       <header className="w-full max-w-4xl flex items-center justify-between z-20 pt-1 sm:pt-2 px-1">
         <div className="text-left">
-          <span className="text-[10px] sm:text-xs tracking-[0.28em] uppercase text-rust/90 font-semibold block">
+          <span className="text-[9.5px] sm:text-xs tracking-[0.22em] sm:tracking-[0.28em] uppercase text-rust/90 font-semibold block leading-tight">
             {couple.nuptialTitle}
           </span>
-          <span className="text-[8.5px] sm:text-[11px] tracking-[0.18em] uppercase text-espresso/65 font-medium">
-            {schedule.dateFormatted} • {location.addressLine2}
+          <span className="text-[8px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase text-espresso/65 font-medium block truncate max-w-[200px] xs:max-w-[240px] sm:max-w-none leading-tight mt-0.5">
+            <span className="sm:hidden">21 Dec 2026 • San Fabian, Pangasinan</span>
+            <span className="hidden sm:inline">{schedule.dateFormatted} • {location.addressLine2}</span>
           </span>
         </div>
 
@@ -518,7 +519,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       {/* =========================================================================
           MIDDLE SECTION: SCRIPT HEADING + 3D PARALLAX TILT ENVELOPE
           ========================================================================= */}
-      <div className="w-full flex-1 flex flex-col items-center justify-center my-auto z-10 perspective-1000 py-1 sm:py-3">
+      <div className="w-full flex-1 flex flex-col items-center justify-center z-10 perspective-1000 py-1 sm:py-3">
         {/* Top Script Greeting */}
         <motion.div
           initial={{ opacity: 0, y: -14 }}
@@ -551,7 +552,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             transform: isOpening ? 'none' : `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
             transition: isOpening ? 'transform 0.4s ease-out' : 'transform 0.15s ease-out',
           }}
-          className="relative w-[92vw] max-w-[480px] aspect-[1.42/1] sm:aspect-[1.48/1] z-20 my-auto overflow-visible preserve-3d"
+          className="relative w-[92vw] max-w-[480px] aspect-[1.42/1] sm:aspect-[1.48/1] z-20 overflow-visible preserve-3d"
         >
           <div className="relative w-full h-full select-none">
             {/* LAYER 0 (z-0): ENVELOPE BACK JACKET & BOTANICAL INNER LINER */}
@@ -949,18 +950,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               >
                 {/* Subtle soft paper depth gradient in lower half */}
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/[0.04] to-transparent pointer-events-none" />
-
-                {/* Stamped Gold Monogram Crest on Front Pocket */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-champagne flex flex-col items-center justify-center">
-                    <span className="font-serif text-2xl sm:text-3xl font-semibold tracking-widest text-espresso">
-                      {couple.monogram}
-                    </span>
-                    <span className="text-[8px] uppercase tracking-[0.25em] text-terracotta mt-0.5">
-                      {schedule.shortDate}
-                    </span>
-                  </div>
-                </div>
               </div>
 
               {/* =====================================================================
@@ -1229,20 +1218,23 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             </motion.div>
           </div>
         </div>
-      </div>
 
-      {/* =========================================================================
-          BOTTOM CONTROLS & AUDIO TOGGLE
-          ========================================================================= */}
-      <motion.footer
-        initial={{ opacity: 0, y: 15 }}
-        animate={isOpening && stage !== 'card-presented' ? { opacity: 0, y: 15 } : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-xl z-20 pb-4 sm:pb-6 flex flex-col items-center gap-2.5 text-center"
-      >
-        {/* Interactive Prompt or Direct Button */}
-        {stage === 'idle' ? (
-          <div className="flex flex-col items-center gap-1">
+        {/* =========================================================================
+            SUITE ACTION BUTTONS & AUDIO TOGGLE
+            (Directly below envelope in centered flat-lay suite: eliminates bottom void)
+            ========================================================================= */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={
+            isOpening && stage !== 'card-presented'
+              ? { opacity: 0, y: 12, pointerEvents: 'none' }
+              : { opacity: 1, y: 0, pointerEvents: 'auto' }
+          }
+          transition={{ duration: 0.35 }}
+          className="w-full max-w-md z-20 mt-3 sm:mt-5 flex flex-col items-center gap-2 sm:gap-2.5 text-center"
+        >
+          {/* Interactive Prompt or Direct Button */}
+          {stage === 'idle' ? (
             <button
               type="button"
               onClick={handleOpen}
@@ -1251,52 +1243,48 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               <span>Open Invitation</span>
               <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
             </button>
-          </div>
-        ) : stage === 'card-peeking' ? (
-          <button
-            type="button"
-            onClick={handleRevealCard}
-            className="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase text-terracotta animate-pulse flex items-center gap-1.5 cursor-pointer touch-manipulation"
-          >
-            <span>Tap to reveal invitation card ↑</span>
-          </button>
-        ) : stage === 'card-presented' ? (
-          <button
-            type="button"
-            onClick={handleProceed}
-            className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-alabaster bg-terracotta hover:bg-terracotta-dark px-5 py-2.5 rounded-full shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
-          >
-            <span>Enter Wedding Website</span>
-            <ArrowRight className="w-4 h-4 text-alabaster" />
-          </button>
-        ) : (
-          <p className="text-[10px] sm:text-xs tracking-[0.16em] uppercase text-espresso/70">
-            Cydrill & Mary Grace • 21 December 2026
-          </p>
-        )}
+          ) : stage === 'card-peeking' ? (
+            <button
+              type="button"
+              onClick={handleRevealCard}
+              className="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase text-terracotta animate-pulse flex items-center gap-1.5 cursor-pointer touch-manipulation"
+            >
+              <span>Tap to reveal invitation card ↑</span>
+            </button>
+          ) : stage === 'card-presented' ? (
+            <button
+              type="button"
+              onClick={handleProceed}
+              className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-alabaster bg-terracotta hover:bg-terracotta-dark px-5 py-2.5 rounded-full shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
+            >
+              <span>Enter Wedding Website</span>
+              <ArrowRight className="w-4 h-4 text-alabaster" />
+            </button>
+          ) : null}
 
-        {/* Audio Toggle Pill with Dancing Equalizer Bars */}
-        <label className="inline-flex items-center gap-2.5 text-[10.5px] sm:text-xs text-espresso/90 cursor-pointer bg-alabaster/90 hover:bg-alabaster px-4 py-1.5 rounded-full border border-terracotta/25 shadow-sm transition-all hover:shadow">
-          <input
-            type="checkbox"
-            checked={withMusic}
-            onChange={(e) => setWithMusic(e.target.checked)}
-            className="accent-terracotta rounded cursor-pointer w-3.5 h-3.5"
-          />
+          {/* Audio Toggle Pill with Dancing Equalizer Bars */}
+          <label className="inline-flex items-center gap-2.5 text-[10px] sm:text-xs text-espresso/90 cursor-pointer bg-alabaster/90 hover:bg-alabaster px-4 py-1.5 rounded-full border border-terracotta/25 shadow-sm transition-all hover:shadow">
+            <input
+              type="checkbox"
+              checked={withMusic}
+              onChange={(e) => setWithMusic(e.target.checked)}
+              className="accent-terracotta rounded cursor-pointer w-3.5 h-3.5"
+            />
 
-          {withMusic ? (
-            <div className="flex items-center gap-0.5 h-3.5 px-0.5">
-              <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance1 0.7s infinite alternate' }} />
-              <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance2 0.5s infinite alternate' }} />
-              <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance3 0.8s infinite alternate' }} />
-            </div>
-          ) : (
-            <VolumeX className="w-3.5 h-3.5 text-espresso/50 shrink-0" />
-          )}
+            {withMusic ? (
+              <div className="flex items-center gap-0.5 h-3.5 px-0.5">
+                <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance1 0.7s infinite alternate' }} />
+                <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance2 0.5s infinite alternate' }} />
+                <span className="w-0.5 bg-terracotta rounded-full" style={{ animation: 'eqDance3 0.8s infinite alternate' }} />
+              </div>
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-espresso/50 shrink-0" />
+            )}
 
-          <span className="font-medium">Play {music.displayLabel}</span>
-        </label>
-      </motion.footer>
+            <span className="font-medium">Play {music.displayLabel}</span>
+          </label>
+        </motion.div>
+      </div>
 
       {/* =========================================================================
           INTERACTIVE MODAL: PERSONALIZE RECIPIENT NAME DIALOG
