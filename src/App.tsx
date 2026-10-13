@@ -104,7 +104,7 @@ export function App() {
       {/* Main Scrolling Invitation Experience */}
       <div
         className={`transition-opacity duration-700 ${
-          isEnvelopeOpen ? 'opacity-100' : 'opacity-0 h-screen overflow-hidden pointer-events-none'
+          isEnvelopeOpen ? 'opacity-100' : 'opacity-0 h-screen overflow-hidden pointer-events-none invisible'
         }`}
       >
         {isMinimalDesign ? (

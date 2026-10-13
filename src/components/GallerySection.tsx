@@ -249,7 +249,7 @@ export const GallerySection: React.FC = () => {
                   >
                     {/* Washi Tape (Alternating Sage Mist & Soft Blush) */}
                     <div
-                      className={`absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 sm:w-22 h-4 sm:h-5 shadow-sm pointer-events-none ${
+                      className={`absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 sm:w-24 h-4 sm:h-5 shadow-sm pointer-events-none ${
                         idx % 2 === 0
                           ? '-rotate-2 bg-sand/90 border border-champagne/70'
                           : 'rotate-2 bg-blush/75 border border-blush-rose/50'

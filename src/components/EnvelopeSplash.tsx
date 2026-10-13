@@ -144,6 +144,8 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   const [showHoldHint, setShowHoldHint] = useState(false);
   const holdIntervalRef = useRef<number | null>(null);
   const holdHintTimeoutRef = useRef<number | null>(null);
+  const holdStartTimeRef = useRef<number>(0);
+  const quickTapCountRef = useRef<number>(0);
 
   // Stamp click count and feedback animation
   const [stampClicks, setStampClicks] = useState(1);
@@ -303,18 +305,11 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     handleProceed();
   };
 
-  // Action: Interactive Wax Seal Click or Tap
+  // Action: Interactive Wax Seal Tap-and-Hold with Quick Tap Fallback
   const handleSealClick = (e?: React.MouseEvent | React.TouchEvent) => {
     if (e) {
       e.stopPropagation();
     }
-    if (isOpening) return;
-    if (holdIntervalRef.current !== null) {
-      clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
-    }
-    setHoldProgress(0);
-    handleOpen();
   };
 
   const handleSealPointerDown = () => {
@@ -331,10 +326,10 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     }
     setShowHoldHint(false);
 
-    const startTime = Date.now();
-    const duration = 500; // Fast 500ms melt
+    holdStartTimeRef.current = Date.now();
+    const duration = 850; // Deliberate, tactile 850ms tap-and-hold melt
     holdIntervalRef.current = window.setInterval(() => {
-      const elapsed = Date.now() - startTime;
+      const elapsed = Date.now() - holdStartTimeRef.current;
       const progress = Math.min(100, Math.floor((elapsed / duration) * 100));
       setHoldProgress(progress);
       if (progress >= 100) {
@@ -353,11 +348,40 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       clearInterval(holdIntervalRef.current);
       holdIntervalRef.current = null;
     }
-    setHoldProgress(0);
-    // On release/click, always open!
-    if (!isOpening) {
-      handleOpen();
+
+    if (isOpening) {
+      setHoldProgress(0);
+      return;
     }
+
+    const elapsed = Date.now() - (holdStartTimeRef.current || 0);
+
+    // If held for majority of the duration (600ms+), complete the open!
+    if (elapsed >= 600 || holdProgress >= 70) {
+      setHoldProgress(0);
+      handleOpen();
+      return;
+    }
+
+    // Double tap fallback: second tap opens immediately
+    quickTapCountRef.current += 1;
+    if (quickTapCountRef.current >= 2) {
+      quickTapCountRef.current = 0;
+      setHoldProgress(0);
+      handleOpen();
+      return;
+    }
+
+    // First quick tap: nudge user with gentle wiggle & prompt
+    setHoldProgress(0);
+    setShowHoldHint(true);
+    if (holdHintTimeoutRef.current !== null) {
+      clearTimeout(holdHintTimeoutRef.current);
+    }
+    holdHintTimeoutRef.current = window.setTimeout(() => {
+      setShowHoldHint(false);
+      quickTapCountRef.current = 0;
+    }, 2200);
   };
 
   const handleSealPointerCancel = () => {
@@ -366,9 +390,6 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       holdIntervalRef.current = null;
     }
     setHoldProgress(0);
-    if (!isOpening) {
-      handleOpen();
-    }
   };
 
   // Action: Interactive Postage Stamp Tap
@@ -392,6 +413,10 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
   // Action: Flip 3D Invitation Card
   const handleFlipCard = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (autoProceedTimerRef.current !== null) {
+      window.clearTimeout(autoProceedTimerRef.current);
+      autoProceedTimerRef.current = null;
+    }
     soundManager.playFlipSound();
     setIsCardFlipped((prev) => !prev);
   };
@@ -443,12 +468,15 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.65, ease: 'easeInOut' }}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden paper-grain px-3 py-3 sm:px-6 sm:py-5 select-none ${
+      className={`fixed inset-0 h-[100dvh] w-full z-50 flex flex-col items-center justify-between overflow-hidden px-3 py-2 sm:px-6 sm:py-5 select-none ${
         isStationery
-          ? 'bg-gradient-to-br from-[#FAFBF9] via-[#F2F5F0] to-[#E2EAE0]'
-          : 'bg-gradient-to-br from-[#F5F8F4] via-[#EAF0E8] to-[#DCE5D8]'
+          ? 'bg-[#FAFBF9] bg-gradient-to-br from-[#FAFBF9] via-[#F2F5F0] to-[#E2EAE0]'
+          : 'bg-[#F5F8F4] bg-gradient-to-br from-[#F5F8F4] via-[#EAF0E8] to-[#DCE5D8]'
       }`}
     >
+      {/* Textured Cotton Paper Grain Overlay */}
+      <div className="pointer-events-none absolute inset-0 paper-grain opacity-40 z-0" />
+
       {/* Ambient Floating Rose Petals & Gold Dust */}
       <FloatingPetals />
 
@@ -726,9 +754,9 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     pointerEvents: isCardFlipped ? 'none' : 'auto',
                     transition: 'opacity 0.25s ease-in-out',
                   }}
-                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center"
+                  className="absolute inset-0 w-full h-full rounded-xl bg-alabaster border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
                 >
-                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4]">
+                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] overflow-hidden">
                     <div className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-champagne/80" />
                     <div className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-champagne/80" />
                     <div className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-champagne/80" />
@@ -750,11 +778,11 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
 
                     {/* Card Middle: Couple Cameo Portrait & Date */}
                     <div className="my-1 flex items-center justify-center gap-3 sm:gap-4 px-2">
-                      <div className="relative w-15 h-15 sm:w-20 sm:h-20 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0 ring-2 ring-champagne/40 ring-offset-1">
+                      <div className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-full p-0.5 border-2 border-champagne shadow-md overflow-hidden bg-sand-light shrink-0 ring-2 ring-champagne/40 ring-offset-1">
                         <img
                           src="/photos/grace-cydrill.jpg"
                           alt="Cydrill and Mary Grace"
-                          className="w-full h-full object-cover object-center"
+                          className="w-full h-full object-cover object-center rounded-full"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
@@ -784,7 +812,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           <button
                             type="button"
                             onClick={handleFlipCard}
-                            className="px-3 py-1.5 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9.5px] sm:text-xs font-medium tracking-wider border border-terracotta/25 flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
+                            className="px-3 py-1.5 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9.5px] sm:text-xs font-medium tracking-wider border border-terracotta/25 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
                             title="Flip card to read personal note and add to calendar"
                           >
                             <RotateCw className="w-3 h-3 text-terracotta" />
@@ -796,7 +824,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           <button
                             type="button"
                             onClick={handleProceed}
-                            className="py-1.5 px-4 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9.5px] sm:text-xs font-semibold tracking-[0.18em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
+                            className="py-1.5 px-4 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9.5px] sm:text-xs font-semibold tracking-[0.18em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden whitespace-nowrap shrink-0"
                           >
                             <span className="relative z-10">Step Inside</span>
                             <ArrowRight className="w-3.5 h-3.5 relative z-10" />
@@ -822,9 +850,9 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     pointerEvents: isCardFlipped ? 'auto' : 'none',
                     transition: 'opacity 0.25s ease-in-out',
                   }}
-                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center"
+                  className="absolute inset-0 w-full h-full rounded-xl bg-gradient-to-b from-[#FFFFFF] via-[#FAFBF9] to-[#F5F8F4] border border-[#D5E0D2] shadow-xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
                 >
-                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative">
+                  <div className="border border-champagne/60 rounded-lg w-full h-full flex flex-col items-center justify-between p-2 sm:p-3 relative overflow-hidden">
                     <div className="w-full">
                       <span className="text-[8px] sm:text-[9.5px] uppercase tracking-[0.3em] text-terracotta font-semibold block mb-0.5">
                         A Note From The Couple
@@ -849,7 +877,13 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           href={getGoogleCalendarUrl()}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={openGoogleCalendarApp}
+                          onClick={(e) => {
+                            if (autoProceedTimerRef.current !== null) {
+                              window.clearTimeout(autoProceedTimerRef.current);
+                              autoProceedTimerRef.current = null;
+                            }
+                            openGoogleCalendarApp(e);
+                          }}
                           className="px-2.5 py-1 rounded-full bg-alabaster hover:bg-white text-espresso text-[8.5px] sm:text-[10px] font-medium border border-champagne shadow-sm flex items-center gap-1 transition-all"
                         >
                           <CalendarPlus className="w-3 h-3 text-terracotta" />
@@ -874,7 +908,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                         <button
                           type="button"
                           onClick={handleFlipCard}
-                          className="px-3 py-1.5 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9.5px] sm:text-xs font-medium tracking-wider border border-terracotta/25 flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
+                          className="px-3 py-1.5 rounded-full bg-sand-light hover:bg-sand text-espresso text-[9.5px] sm:text-xs font-medium tracking-wider border border-terracotta/25 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
                           title="Flip back to front invitation"
                         >
                           <RotateCw className="w-3 h-3 text-terracotta" />
@@ -884,7 +918,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                         <button
                           type="button"
                           onClick={handleProceed}
-                          className="py-1.5 px-4 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9.5px] sm:text-xs font-semibold tracking-[0.18em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden"
+                          className="py-1.5 px-4 rounded-full bg-gradient-to-r from-terracotta via-terracotta-dark to-rust text-alabaster font-sans text-[9.5px] sm:text-xs font-semibold tracking-[0.18em] uppercase shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 relative overflow-hidden whitespace-nowrap shrink-0"
                         >
                           <span className="relative z-10">Step Inside</span>
                           <ArrowRight className="w-3.5 h-3.5 relative z-10" />
@@ -1047,7 +1081,9 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           ? holdProgress >= 50
                             ? `Breaking... ${holdProgress}%`
                             : `Melting... ${holdProgress}%`
-                          : 'Click to Open'}
+                          : showHoldHint
+                          ? 'Tap and hold to break seal!'
+                          : 'Tap & hold to break seal'}
                       </span>
                     </motion.div>
                   )}
@@ -1060,22 +1096,26 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                   onPointerDown={handleSealPointerDown}
                   onPointerUp={handleSealPointerUp}
                   onPointerCancel={handleSealPointerCancel}
-                  aria-label="Click wax seal to open wedding invitation"
+                  aria-label="Tap and hold wax seal to open wedding invitation"
                   animate={
                     isOpening
                       ? { scale: [1, 1.25, 0.4], opacity: [1, 1, 0], rotate: 12 }
+                      : showHoldHint
+                      ? { rotate: [-5, 5, -5, 5, 0], scale: [1, 1.06, 1] }
                       : { scale: holdProgress > 0 ? 1 + holdProgress * 0.0016 : [1, 1.04, 1] }
                   }
                   transition={
                     isOpening
                       ? { duration: 0.38, ease: 'easeOut' }
+                      : showHoldHint
+                      ? { duration: 0.35, ease: 'easeInOut' }
                       : { duration: 2.8, repeat: holdProgress > 0 ? 0 : Infinity, ease: 'easeInOut' }
                   }
-                  className="relative w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform touch-manipulation"
+                  className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform touch-manipulation"
                 >
                   {/* Golden Charge Ring when pressing & holding */}
                   {holdProgress > 0 && (
-                    <svg className="absolute -inset-2 w-24 h-24 sm:w-26 sm:h-26 -rotate-90 pointer-events-none">
+                    <svg className="absolute -inset-2 w-24 h-24 sm:w-28 sm:h-28 -rotate-90 pointer-events-none">
                       <circle
                         cx="50%"
                         cy="50%"
@@ -1161,7 +1201,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               onClick={handleStampClick}
               title="Tap stamp to stamp postal cancellation!"
             >
-              <div className="relative w-13 h-16 sm:w-15 sm:h-18 p-1 rounded-sm bg-[#FAFBF9] border-2 border-dashed border-[#B8C7B4] shadow-md flex flex-col items-center justify-between text-center rotate-2 group-hover:rotate-0 transition-transform">
+              <div className="relative w-12 h-16 sm:w-14 sm:h-20 p-1 rounded-sm bg-[#FAFBF9] border-2 border-dashed border-[#B8C7B4] shadow-md flex flex-col items-center justify-between text-center rotate-2 group-hover:rotate-0 transition-transform">
                 <div className="border border-champagne/70 w-full h-full p-0.5 flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] to-[#F2F5F0]">
                   <span className="text-[6px] uppercase tracking-[0.18em] text-terracotta font-bold">
                     PHILIPPINES
@@ -1173,7 +1213,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                 </div>
 
                 {/* Postal Ink Cancellation Stamp Overlay */}
-                <div className="absolute -left-1.5 top-0.5 w-13 h-13 sm:w-15 sm:h-15 rounded-full border border-rust/50 flex flex-col items-center justify-center -rotate-12 pointer-events-none opacity-70">
+                <div className="absolute -left-1.5 top-0.5 w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-rust/50 flex flex-col items-center justify-center -rotate-12 pointer-events-none opacity-70">
                   <span className="text-[5px] tracking-widest uppercase font-semibold text-rust">
                     SAN FABIAN
                   </span>
@@ -1198,7 +1238,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         initial={{ opacity: 0, y: 15 }}
         animate={isOpening && stage !== 'card-presented' ? { opacity: 0, y: 15 } : { opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-xl z-20 pb-1 sm:pb-3 flex flex-col items-center gap-2.5 text-center"
+        className="w-full max-w-xl z-20 pb-1 sm:pb-3 flex flex-col items-center gap-2 text-center"
       >
         {/* Interactive Prompt or Direct Button */}
         {stage === 'idle' ? (
@@ -1206,10 +1246,10 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             <button
               type="button"
               onClick={handleOpen}
-              className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-espresso hover:text-terracotta bg-alabaster/95 hover:bg-alabaster px-4 py-2 rounded-full border border-champagne shadow-sm hover:shadow transition-all flex items-center gap-2 group cursor-pointer active:scale-95 touch-manipulation"
+              className="text-[11px] sm:text-xs font-semibold tracking-[0.18em] uppercase text-espresso/85 hover:text-terracotta bg-alabaster/90 hover:bg-alabaster px-4 py-1.5 rounded-full border border-champagne/70 shadow-sm hover:shadow transition-all flex items-center gap-2 group cursor-pointer active:scale-95 touch-manipulation"
             >
-              <span>Click to Open Invitation</span>
-              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
+              <span>Tap & hold wax seal or click here</span>
+              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         ) : stage === 'card-peeking' ? (

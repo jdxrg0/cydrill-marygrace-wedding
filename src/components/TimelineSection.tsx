@@ -70,7 +70,7 @@ export const TimelineSection: React.FC = () => {
                 className="relative flex items-center gap-3.5"
               >
                 {/* Icon Medallion on the Spine */}
-                <div className="relative z-10 w-13 h-13 w-[52px] h-[52px] shrink-0 rounded-full bg-[#3E523B] border-2 border-blush shadow-md flex items-center justify-center text-alabaster [&_svg]:text-blush-light">
+                <div className="relative z-10 w-[52px] h-[52px] shrink-0 rounded-full bg-[#3E523B] border-2 border-blush shadow-md flex items-center justify-center text-alabaster [&_svg]:text-blush-light">
                   {renderTimelineIcon(event.icon, 'w-5 h-5')}
                 </div>
 
