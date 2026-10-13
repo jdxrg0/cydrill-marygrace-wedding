@@ -279,6 +279,14 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       colors: ['#C8A97E', '#FAFBF9', '#D49499'],
       scalar: 0.8,
     });
+
+    // Auto-proceed into website after 10 seconds of card presentation
+    if (autoProceedTimerRef.current !== null) {
+      window.clearTimeout(autoProceedTimerRef.current);
+    }
+    autoProceedTimerRef.current = window.setTimeout(() => {
+      handleProceed();
+    }, 10000);
   };
 
   // Action: Proceed smoothly into main wedding website
@@ -300,7 +308,20 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     handleProceed();
   };
 
-  // Action: Interactive Wax Seal Tap-and-Hold
+  // Action: Interactive Wax Seal Click or Tap
+  const handleSealClick = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    if (isOpening) return;
+    if (holdIntervalRef.current !== null) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    setHoldProgress(0);
+    handleOpen();
+  };
+
   const handleSealPointerDown = () => {
     if (isOpening) return;
 
@@ -316,7 +337,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
     setShowHoldHint(false);
 
     const startTime = Date.now();
-    const duration = 1200; // 1200ms (1.2s) deliberate tap-and-hold duration
+    const duration = 500; // Fast 500ms melt
     holdIntervalRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(100, Math.floor((elapsed / duration) * 100));
@@ -337,18 +358,10 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       clearInterval(holdIntervalRef.current);
       holdIntervalRef.current = null;
     }
-
-    // Require holding until 100%. If released early, do NOT open; prompt to tap and hold!
+    setHoldProgress(0);
+    // On release/click, always open!
     if (!isOpening) {
-      if (holdProgress < 100) {
-        setHoldProgress(0);
-        setShowHoldHint(true);
-        holdHintTimeoutRef.current = window.setTimeout(() => {
-          setShowHoldHint(false);
-        }, 2200);
-      }
-    } else {
-      setHoldProgress(0);
+      handleOpen();
     }
   };
 
@@ -358,6 +371,9 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       holdIntervalRef.current = null;
     }
     setHoldProgress(0);
+    if (!isOpening) {
+      handleOpen();
+    }
   };
 
   // Action: Interactive Postage Stamp Tap
@@ -1025,37 +1041,31 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                           ? holdProgress >= 50
                             ? `Breaking... ${holdProgress}%`
                             : `Melting... ${holdProgress}%`
-                          : showHoldHint
-                          ? 'Keep holding to break seal!'
-                          : 'Tap & hold to break seal'}
+                          : 'Click to Open'}
                       </span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
                 {/* Wax Seal Button */}
-                <motion.div
-                  role="button"
-                  tabIndex={0}
+                <motion.button
+                  type="button"
+                  onClick={handleSealClick}
                   onPointerDown={handleSealPointerDown}
                   onPointerUp={handleSealPointerUp}
                   onPointerCancel={handleSealPointerCancel}
-                  aria-label="Tap and hold wax seal to open wedding invitation"
+                  aria-label="Click wax seal to open wedding invitation"
                   animate={
                     isOpening
                       ? { scale: [1, 1.25, 0.4], opacity: [1, 1, 0], rotate: 12 }
-                      : showHoldHint
-                      ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.05, 1] }
                       : { scale: holdProgress > 0 ? 1 + holdProgress * 0.0016 : [1, 1.04, 1] }
                   }
                   transition={
                     isOpening
                       ? { duration: 0.38, ease: 'easeOut' }
-                      : showHoldHint
-                      ? { duration: 0.35, ease: 'easeInOut' }
                       : { duration: 2.8, repeat: holdProgress > 0 ? 0 : Infinity, ease: 'easeInOut' }
                   }
-                  className="relative w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform"
+                  className="relative w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center cursor-pointer select-none focus:outline-none group active:scale-95 transition-transform touch-manipulation"
                 >
                   {/* Golden Charge Ring when pressing & holding */}
                   {holdProgress > 0 && (
@@ -1125,7 +1135,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                       <span className="w-1.5 h-[1px] bg-champagne" />
                     </div>
                   </div>
-                </motion.div>
+                </motion.button>
               </div>
             </div>
 
@@ -1184,20 +1194,34 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         transition={{ duration: 0.4 }}
         className="w-full max-w-xl z-20 pb-1 sm:pb-3 flex flex-col items-center gap-2.5 text-center"
       >
-        {/* Interactive Prompt or Drag Instruction */}
+        {/* Interactive Prompt or Direct Button */}
         {stage === 'idle' ? (
           <div className="flex items-center gap-2">
-            <p className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-espresso flex items-center gap-1.5">
-              <span>{couple.envelopePrompt}</span>
-              <Sparkles className="w-3.5 h-3.5 text-terracotta animate-pulse" />
-            </p>
+            <button
+              type="button"
+              onClick={handleOpen}
+              className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-espresso hover:text-terracotta bg-alabaster/95 hover:bg-alabaster px-4 py-2 rounded-full border border-champagne shadow-sm hover:shadow transition-all flex items-center gap-2 group cursor-pointer active:scale-95 touch-manipulation"
+            >
+              <span>Click to Open Invitation</span>
+              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         ) : stage === 'card-peeking' ? (
           <button
+            type="button"
             onClick={handleRevealCard}
-            className="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase text-terracotta animate-pulse flex items-center gap-1.5"
+            className="text-xs sm:text-sm font-semibold tracking-[0.18em] uppercase text-terracotta animate-pulse flex items-center gap-1.5 cursor-pointer touch-manipulation"
           >
-            <span>Drag card upward to reveal invitation ↑</span>
+            <span>Tap to reveal invitation card ↑</span>
+          </button>
+        ) : stage === 'card-presented' ? (
+          <button
+            type="button"
+            onClick={handleProceed}
+            className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase text-alabaster bg-terracotta hover:bg-terracotta-dark px-5 py-2.5 rounded-full shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
+          >
+            <span>Enter Wedding Website</span>
+            <ArrowRight className="w-4 h-4 text-alabaster" />
           </button>
         ) : (
           <p className="text-[10px] sm:text-xs tracking-[0.16em] uppercase text-espresso/70">

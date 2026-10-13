@@ -9,14 +9,24 @@ export const RemindersSection: React.FC = () => {
   const [copiedHashtag, setCopiedHashtag] = useState(false);
 
   const handleCopyHashtag = () => {
-    navigator.clipboard.writeText(couple.hashtag);
+    try {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(couple.hashtag);
+      }
+    } catch {
+      // Ignore clipboard permission issues
+    }
     setCopiedHashtag(true);
-    confetti({
-      particleCount: 40,
-      spread: 60,
-      origin: { y: 0.75 },
-      colors: ['#6B8467', '#465943', '#E8C5C8', '#D49499', '#C8A97E'],
-    });
+    try {
+      confetti({
+        particleCount: 40,
+        spread: 60,
+        origin: { y: 0.75 },
+        colors: ['#6B8467', '#465943', '#E8C5C8', '#D49499', '#C8A97E'],
+      });
+    } catch {
+      // Ignore confetti issues
+    }
     setTimeout(() => setCopiedHashtag(false), 2600);
   };
 

@@ -39,12 +39,14 @@ export const HeroSection: React.FC = () => {
   return (
     <section
       id="home"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      className="relative min-h-[92vh] sm:min-h-screen w-full flex flex-col justify-between overflow-hidden bg-espresso touch-pan-y"
+      className="relative min-h-[92vh] sm:min-h-screen w-full flex flex-col justify-between overflow-hidden bg-espresso"
     >
       {/* Full-Bleed Couple Portrait Crossfade Slideshow with Subtle Ken Burns Zoom */}
-      <div className="absolute inset-0 z-0">
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="absolute inset-0 z-0 touch-pan-y"
+      >
         <AnimatePresence mode="sync">
           <motion.img
             key={slides[activeSlide]}
