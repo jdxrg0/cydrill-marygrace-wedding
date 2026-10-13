@@ -468,7 +468,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.65, ease: 'easeInOut' }}
-      className={`fixed inset-0 h-[100dvh] w-full z-50 flex flex-col items-center justify-between overflow-hidden px-3 py-2 sm:px-6 sm:py-5 select-none ${
+      className={`fixed inset-0 h-[100dvh] w-full z-50 flex flex-col items-center justify-between overflow-hidden px-4 py-3 sm:px-6 sm:py-6 select-none ${
         isStationery
           ? 'bg-[#FAFBF9] bg-gradient-to-br from-[#FAFBF9] via-[#F2F5F0] to-[#E2EAE0]'
           : 'bg-[#F5F8F4] bg-gradient-to-br from-[#F5F8F4] via-[#EAF0E8] to-[#DCE5D8]'
@@ -484,30 +484,30 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       <div className="pointer-events-none absolute top-10 left-10 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-blush/25 blur-3xl z-[1]" />
       <div className="pointer-events-none absolute bottom-10 right-10 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-terracotta/15 blur-3xl z-[1]" />
 
-      {/* Corner Botanicals */}
+      {/* Corner Botanicals (Subtly framed in corners so they never cut across header text) */}
       <BotanicalSprig
-        className="fixed -top-12 -left-12 w-40 h-40 sm:w-72 sm:h-72 rotate-90 opacity-35 sm:opacity-55 pointer-events-none z-[2]"
+        className="fixed -top-14 -left-14 sm:-top-12 sm:-left-12 w-32 h-32 sm:w-72 sm:h-72 rotate-90 opacity-20 sm:opacity-40 pointer-events-none z-[1]"
         color={isStationery ? '#6B8467' : '#465943'}
       />
       <BotanicalSprig
-        className="fixed -bottom-14 -right-12 w-44 h-44 sm:w-80 sm:h-80 -rotate-90 opacity-35 sm:opacity-55 pointer-events-none z-[2]"
+        className="fixed -bottom-16 -right-14 sm:-bottom-14 sm:-right-12 w-36 h-36 sm:w-80 sm:h-80 -rotate-90 opacity-20 sm:opacity-40 pointer-events-none z-[1]"
         color="#6B8467"
       />
 
       {/* Top Header Bar */}
-      <header className="w-full max-w-4xl flex items-center justify-between z-20 pt-1">
+      <header className="w-full max-w-4xl flex items-center justify-between z-20 pt-1 sm:pt-2 px-1">
         <div className="text-left">
-          <span className="text-[10px] sm:text-xs tracking-[0.3em] uppercase text-rust/80 font-semibold block">
+          <span className="text-[10px] sm:text-xs tracking-[0.28em] uppercase text-rust/90 font-semibold block">
             {couple.nuptialTitle}
           </span>
-          <span className="text-[9px] sm:text-[11px] tracking-[0.2em] uppercase text-espresso/60">
+          <span className="text-[8.5px] sm:text-[11px] tracking-[0.18em] uppercase text-espresso/65 font-medium">
             {schedule.dateFormatted} • {location.addressLine2}
           </span>
         </div>
 
         <button
           onClick={handleDirectSkip}
-          className="text-[10px] sm:text-xs uppercase tracking-[0.2em] font-medium text-espresso/70 hover:text-espresso bg-alabaster/80 hover:bg-alabaster px-3 py-1.5 rounded-full border border-terracotta/20 shadow-sm transition-all flex items-center gap-1.5"
+          className="text-[9.5px] sm:text-xs uppercase tracking-[0.18em] font-semibold text-espresso/80 hover:text-espresso bg-alabaster/90 hover:bg-white px-3.5 py-1.5 rounded-full border border-terracotta/25 shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-95 touch-manipulation"
           aria-label="Skip splash screen to view wedding details"
         >
           <span>Skip to Website</span>
@@ -518,7 +518,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
       {/* =========================================================================
           MIDDLE SECTION: SCRIPT HEADING + 3D PARALLAX TILT ENVELOPE
           ========================================================================= */}
-      <div className="w-full flex flex-col items-center justify-center my-auto z-10 perspective-1000">
+      <div className="w-full flex-1 flex flex-col items-center justify-center my-auto z-10 perspective-1000 py-1 sm:py-3">
         {/* Top Script Greeting */}
         <motion.div
           initial={{ opacity: 0, y: -14 }}
@@ -528,21 +528,21 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
               : { opacity: 1, y: 0, scale: 1 }
           }
           transition={{ duration: 0.45, ease: 'easeOut' }}
-          className="text-center mb-3 sm:mb-5 z-10 pointer-events-none"
+          className="text-center mb-2.5 sm:mb-4 z-10 pointer-events-none"
         >
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.38em] text-rust/90 font-semibold mb-0.5">
+          <p className="text-[9.5px] sm:text-xs uppercase tracking-[0.35em] text-rust/90 font-semibold mb-0.5">
             Formal Wedding Invitation
           </p>
           <h1 className="font-script text-4xl sm:text-6xl md:text-7xl text-espresso drop-shadow-sm leading-tight">
             {couple.envelopeGreeting}
           </h1>
-          <p className="text-[10px] sm:text-xs text-espresso/70 tracking-[0.18em] uppercase mt-0.5">
+          <p className="text-[9.5px] sm:text-xs text-espresso/70 tracking-[0.18em] uppercase mt-0.5">
             {couple.displayTitle}
           </p>
         </motion.div>
 
         {/* =========================================================================
-            3D PARALLAX ENVELOPE CONTAINER
+            3D PARALLAX ENVELOPE CONTAINER (Optimized aspect ratio for mobile & desktop)
             ========================================================================= */}
         <div
           onMouseMove={handleEnvelopeMouseMove}
@@ -551,7 +551,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
             transform: isOpening ? 'none' : `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
             transition: isOpening ? 'transform 0.4s ease-out' : 'transform 0.15s ease-out',
           }}
-          className="relative w-[94vw] max-w-[500px] aspect-[1.5/1] z-20 my-1 overflow-visible preserve-3d"
+          className="relative w-[92vw] max-w-[480px] aspect-[1.42/1] sm:aspect-[1.48/1] z-20 my-auto overflow-visible preserve-3d"
         >
           <div className="relative w-full h-full select-none">
             {/* LAYER 0 (z-0): ENVELOPE BACK JACKET & BOTANICAL INNER LINER */}
@@ -977,7 +977,7 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
                     : { opacity: 1, scaleX: 1 }
                 }
                 transition={{ duration: 0.35 }}
-                className="absolute inset-x-0 bottom-2.5 sm:bottom-3.5 h-20 sm:h-24 z-20 pointer-events-auto bg-[#FAFBF9]/45 backdrop-blur-md border-y border-[#C8A97E]/40 shadow-[0_2px_12px_rgba(34,43,35,0.04)] flex items-center justify-center px-4 sm:px-8"
+                className="absolute inset-x-0 bottom-2 sm:bottom-3.5 h-[76px] sm:h-24 z-20 pointer-events-auto bg-[#FAFBF9]/45 backdrop-blur-md border-y border-[#C8A97E]/40 shadow-[0_2px_12px_rgba(34,43,35,0.04)] flex items-center justify-center px-4 sm:px-8"
               >
                 {/* Thin gold foil pinstripe top and bottom */}
                 <div className="absolute inset-x-0 top-0.5 h-[1px] bg-gradient-to-r from-transparent via-[#C8A97E]/50 to-transparent" />
@@ -1238,18 +1238,18 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
         initial={{ opacity: 0, y: 15 }}
         animate={isOpening && stage !== 'card-presented' ? { opacity: 0, y: 15 } : { opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-xl z-20 pb-1 sm:pb-3 flex flex-col items-center gap-2 text-center"
+        className="w-full max-w-xl z-20 pb-4 sm:pb-6 flex flex-col items-center gap-2.5 text-center"
       >
         {/* Interactive Prompt or Direct Button */}
         {stage === 'idle' ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-1">
             <button
               type="button"
               onClick={handleOpen}
-              className="text-[11px] sm:text-xs font-semibold tracking-[0.18em] uppercase text-espresso/85 hover:text-terracotta bg-alabaster/90 hover:bg-alabaster px-4 py-1.5 rounded-full border border-champagne/70 shadow-sm hover:shadow transition-all flex items-center gap-2 group cursor-pointer active:scale-95 touch-manipulation"
+              className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-espresso hover:text-terracotta bg-alabaster/95 hover:bg-white px-5 py-2 rounded-full border border-champagne/80 shadow-sm hover:shadow transition-all flex items-center gap-2 group cursor-pointer active:scale-95 touch-manipulation whitespace-nowrap"
             >
-              <span>Tap & hold wax seal or click here</span>
-              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-0.5 transition-transform" />
+              <span>Open Invitation</span>
+              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         ) : stage === 'card-peeking' ? (
