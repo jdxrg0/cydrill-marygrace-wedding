@@ -162,27 +162,9 @@ export const EntourageSection: React.FC = () => {
               </div>
             ))}
           </div>
-
-          {/* Principal Sponsors Attire Guide Callout */}
-          <div className="mt-5 sm:mt-7 p-3.5 sm:p-5 rounded-2xl bg-sand-light/80 border border-champagne/60 text-left max-w-2xl mx-auto space-y-2">
-            <p className="font-sans text-[10px] sm:text-[11px] font-bold tracking-[0.2em] text-rust uppercase text-center">
-              ✦ Attire Guide for Principal Sponsors ✦
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-espresso">
-              <div className="bg-alabaster/90 p-2.5 rounded-xl border border-blush/40">
-                <span className="font-bold text-terracotta block text-[11px] uppercase tracking-wider">Ninangs:</span>
-                <p className="text-[11px] sm:text-xs text-espresso/90 mt-0.5">Floor-length formal gowns in Champagne, Rose Gold, or Rose Beige.</p>
-                <p className="text-[10px] text-rust font-serif italic mt-1">(Kindly leave Sage Green for the bridesmaids)</p>
-              </div>
-              <div className="bg-alabaster/90 p-2.5 rounded-xl border border-champagne/40">
-                <span className="font-bold text-terracotta block text-[11px] uppercase tracking-wider">Ninongs:</span>
-                <p className="text-[11px] sm:text-xs text-espresso/90 mt-0.5">Barong Tagalog or a Charcoal Grey / Black Suit with a Blush Pink necktie.</p>
-              </div>
-            </div>
-          </div>
         </motion.div>
 
-        {/* SECONDARY SPONSORS */}
+        {/* ENTOURAGE & SECONDARY SPONSORS */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -190,11 +172,12 @@ export const EntourageSection: React.FC = () => {
           transition={{ duration: 0.7 }}
           className="mt-8 sm:mt-12 bg-alabaster rounded-3xl p-4 sm:p-10 border border-champagne/50 shadow-card text-center"
         >
+          {/* 1. THE ENTOURAGE: Best Man & Matrons of Honor */}
           <h3 className="font-script text-4xl sm:text-6xl text-rust">
-            Secondary Sponsors
+            The Entourage
           </h3>
           <p className="text-[10px] sm:text-sm tracking-[0.22em] uppercase text-terracotta font-semibold mt-0.5">
-            {entourage.secondarySponsorsSubtitle}
+            {entourage.entourageSubtitle}
           </p>
           <BohoSunDivider className="my-2.5 sm:my-4" />
 
@@ -220,9 +203,20 @@ export const EntourageSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Candle, Veil, Cord */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 mt-3 sm:mt-6">
-            {[entourage.candle, entourage.veil, entourage.cord].map((group) => (
+          {/* 2. SECONDARY SPONSORS HEADER (Before the Candle) */}
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-9 border-t border-sand/70">
+            <h3 className="font-script text-4xl sm:text-6xl text-rust">
+              Secondary Sponsors
+            </h3>
+            <p className="text-[10px] sm:text-sm tracking-[0.22em] uppercase text-terracotta font-semibold mt-0.5">
+              {entourage.secondarySponsorsSubtitle}
+            </p>
+            <BohoSunDivider className="my-2.5 sm:my-4" />
+          </div>
+
+          {/* Candle, Cord, Veil */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 mt-4 sm:mt-6">
+            {[entourage.candle, entourage.cord, entourage.veil].map((group) => (
               <div
                 key={group.title}
                 className="bg-sand-light/65 rounded-2xl p-3.5 sm:p-5 border border-champagne/35"

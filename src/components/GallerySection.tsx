@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -8,12 +8,9 @@ import {
   Heart,
   Sparkles,
   Film,
-  Camera,
 } from 'lucide-react';
 import { weddingConfig } from '../config/weddingConfig';
 import { BohoSunDivider, TornPaperDivider } from './Dividers';
-
-const PORTRAITS_PER_PAGE = 12;
 
 /**
  * Maps a full-resolution web portrait (/photos/grace-cydrill-XX.jpg)
@@ -27,46 +24,55 @@ const toThumbUrl = (url: string): string =>
 export const GallerySection: React.FC = () => {
   const { photos, couple, schedule } = weddingConfig;
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
-  const [setFilter, setSetFilter] = useState<'all' | 'white' | 'earth'>('all');
-  const [rollPage, setRollPage] = useState(0);
 
-  const allPhotos = photos.gallery;
   const chapters = photos.storyChapters;
 
-  const filteredRoll = allPhotos.filter((_, idx) => {
-    if (setFilter === 'white') return idx < 31; // #01 to #31
-    if (setFilter === 'earth') return idx >= 31; // #32 to #46
-    return true;
-  });
-
-  const totalRollPages = Math.max(1, Math.ceil(filteredRoll.length / PORTRAITS_PER_PAGE));
-  const safeRollPage = Math.min(rollPage, totalRollPages - 1);
-  const paginatedRoll = filteredRoll.slice(
-    safeRollPage * PORTRAITS_PER_PAGE,
-    (safeRollPage + 1) * PORTRAITS_PER_PAGE
-  );
-
-  const handleFilterChange = (nextFilter: 'all' | 'white' | 'earth') => {
-    setSetFilter(nextFilter);
-    setRollPage(0);
-  };
+  // Curated story photos from Chapter I to IV
+  const storyPhotos = useMemo(() => {
+    const list: {
+      id: string;
+      url: string;
+      caption: string;
+      frameCode?: string;
+      chapterTag?: string;
+      storyNote?: string;
+    }[] = [];
+    const seen = new Set<string>();
+    chapters.forEach((ch) => {
+      ch.photos.forEach((p) => {
+        if (!seen.has(p.id)) {
+          seen.add(p.id);
+          list.push({
+            id: p.id,
+            url: p.url,
+            caption: p.caption,
+            frameCode: p.frameCode,
+            chapterTag: `${ch.chapterNumber} • ${ch.seasonTag}`,
+            storyNote: ch.quote,
+          });
+        }
+      });
+    });
+    return list;
+  }, [chapters]);
 
   const openLightboxById = (photoId: string) => {
-    const idx = allPhotos.findIndex((p) => p.id === photoId);
+    const idx = storyPhotos.findIndex((p) => p.id === photoId);
     if (idx !== -1) setActivePhotoIndex(idx);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (activePhotoIndex === null) return;
-    setActivePhotoIndex((activePhotoIndex - 1 + allPhotos.length) % allPhotos.length);
+    setActivePhotoIndex((activePhotoIndex - 1 + storyPhotos.length) % storyPhotos.length);
   };
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (activePhotoIndex === null) return;
-    setActivePhotoIndex((activePhotoIndex + 1) % allPhotos.length);
+    setActivePhotoIndex((activePhotoIndex + 1) % storyPhotos.length);
   };
+
 
   const ch1 = chapters[0];
   const ch2 = chapters[1];
@@ -444,151 +450,12 @@ export const GallerySection: React.FC = () => {
             </motion.div>
           )}
 
-          {/* =================================================================
-              COMPLETE PRENUP STUDIO ROLL (Paginated 12 Lightweight Thumbnails/Page)
-             ================================================================= */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="bg-alabaster rounded-3xl p-5 sm:p-9 border border-champagne/60 shadow-card"
-          >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-champagne/40">
-              <div>
-                <div className="inline-flex items-center gap-2 bg-blush-light/85 border border-blush/60 px-3 py-1 rounded-full mb-2">
-                  <Camera className="w-3.5 h-3.5 text-blush-deep" />
-                  <span className="text-[10px] sm:text-xs uppercase tracking-[0.22em] text-rust font-bold">
-                    Complete Keepsake Archive • {allPhotos.length} Portraits
-                  </span>
-                </div>
-                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-espresso">
-                  Our Full Prenup Studio Roll
-                </h3>
-                <p className="text-xs sm:text-sm text-espresso/75 mt-0.5">
-                  Tap any portrait to open it in HD and swipe through all {allPhotos.length} memories.
-                </p>
-              </div>
-
-              {/* Filter Pills for Set I (White Bridal) & Set II (Earth-Tone) */}
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                {[
-                  { id: 'all', label: `All (${allPhotos.length})` },
-                  { id: 'white', label: 'White Bridal (31)' },
-                  { id: 'earth', label: 'Earth-Tone (15)' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => handleFilterChange(tab.id as 'all' | 'white' | 'earth')}
-                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all ${
-                      setFilter === tab.id
-                        ? 'bg-terracotta text-alabaster shadow-sm'
-                        : 'bg-sand-light text-espresso/75 hover:bg-sand border border-champagne/40'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Paginated 12-Thumbnail Grid (Lightweight ~45KB Thumbs + Off-Thread Async Decoding) */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${setFilter}-page-${safeRollPage}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 sm:gap-3.5 mt-5"
-              >
-                {paginatedRoll.map((photo) => {
-                  const frameNum = photo.id.replace('photo-', '');
-                  return (
-                    <button
-                      key={photo.id}
-                      type="button"
-                      onClick={() => openLightboxById(photo.id)}
-                      className="group relative bg-sand-light/65 p-1.5 pb-2 rounded-xl border border-champagne/50 shadow-sm hover:shadow-md transition-all text-left focus:outline-none"
-                    >
-                      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-espresso/10">
-                        <img
-                          src={toThumbUrl(photo.url)}
-                          alt={photo.caption}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover object-[50%_20%] group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <span className="absolute top-1.5 left-1.5 bg-espresso/70 backdrop-blur-sm text-alabaster text-[9px] font-mono px-1.5 py-0.5 rounded">
-                          #{frameNum}
-                        </span>
-                      </div>
-                      <p className="font-script text-base text-rust text-center mt-1.5 truncate px-1">
-                        {photo.caption}
-                      </p>
-                    </button>
-                  );
-                })}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Pagination Controls (12 Portraits per Page — Zero Heavy DOM Reflow) */}
-            {totalRollPages > 1 && (
-              <div className="mt-6 pt-4 border-t border-champagne/35 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-rust font-semibold">
-                  Showing {safeRollPage * PORTRAITS_PER_PAGE + 1}–
-                  {Math.min((safeRollPage + 1) * PORTRAITS_PER_PAGE, filteredRoll.length)} of{' '}
-                  {filteredRoll.length} Portraits
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={safeRollPage === 0}
-                    onClick={() => setRollPage((p) => Math.max(0, p - 1))}
-                    className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs uppercase tracking-wider font-semibold bg-sand-light hover:bg-blush-light/80 text-rust border border-champagne/60 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>Prev</span>
-                  </button>
-
-                  <div className="flex items-center gap-1 px-1">
-                    {Array.from({ length: totalRollPages }).map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setRollPage(idx)}
-                        className={`w-7 h-7 rounded-full text-xs font-serif font-bold transition-all ${
-                          idx === safeRollPage
-                            ? 'bg-terracotta text-alabaster shadow-sm'
-                            : 'bg-sand-light text-espresso/70 hover:bg-sand border border-champagne/40'
-                        }`}
-                      >
-                        {idx + 1}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={safeRollPage >= totalRollPages - 1}
-                    onClick={() => setRollPage((p) => Math.min(totalRollPages - 1, p + 1))}
-                    className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs uppercase tracking-wider font-semibold bg-sand-light hover:bg-blush-light/80 text-rust border border-champagne/60 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                  >
-                    <span>Next</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </motion.div>
         </div>
       </div>
 
       {/* Full-Screen Interactive Story Lightbox Modal */}
       <AnimatePresence>
-        {activePhotoIndex !== null && (
+        {activePhotoIndex !== null && storyPhotos[activePhotoIndex] && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -600,7 +467,7 @@ export const GallerySection: React.FC = () => {
               type="button"
               onClick={() => setActivePhotoIndex(null)}
               aria-label="Close photo lightbox"
-              className="fixed top-5 right-5 w-10 h-10 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center transition-colors z-10"
+              className="fixed top-5 right-5 w-10 h-10 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center transition-colors z-10 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -609,21 +476,21 @@ export const GallerySection: React.FC = () => {
               type="button"
               onClick={handlePrev}
               aria-label="Previous photo"
-              className="fixed left-3 sm:left-8 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center transition-colors z-10"
+              className="fixed left-3 sm:left-8 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center transition-colors z-10 cursor-pointer"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
 
             <motion.div
-              key={allPhotos[activePhotoIndex].id}
+              key={storyPhotos[activePhotoIndex].id}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.25}
               onDragEnd={(_e, info) => {
                 if (info.offset.x < -50 || info.velocity.x < -300) {
-                  setActivePhotoIndex((prev) => (prev !== null ? (prev + 1) % allPhotos.length : null));
+                  setActivePhotoIndex((prev) => (prev !== null ? (prev + 1) % storyPhotos.length : null));
                 } else if (info.offset.x > 50 || info.velocity.x > 300) {
-                  setActivePhotoIndex((prev) => (prev !== null ? (prev - 1 + allPhotos.length) % allPhotos.length : null));
+                  setActivePhotoIndex((prev) => (prev !== null ? (prev - 1 + storyPhotos.length) % storyPhotos.length : null));
                 }
               }}
               initial={{ scale: 0.94, opacity: 0, x: 20 }}
@@ -633,31 +500,31 @@ export const GallerySection: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
               className="max-w-3xl w-full bg-alabaster p-4 sm:p-6 rounded-3xl shadow-2xl text-center border border-blush touch-pan-y cursor-grab active:cursor-grabbing select-none"
             >
-              {allPhotos[activePhotoIndex].chapterTag && (
+              {storyPhotos[activePhotoIndex].chapterTag && (
                 <span className="inline-block text-[10px] sm:text-xs uppercase tracking-[0.25em] text-rust font-bold bg-blush-light border border-blush/60 px-3.5 py-1 rounded-full mb-3 pointer-events-none">
-                  {allPhotos[activePhotoIndex].chapterTag}
+                  {storyPhotos[activePhotoIndex].chapterTag}
                 </span>
               )}
 
               <img
-                src={allPhotos[activePhotoIndex].url}
-                alt={allPhotos[activePhotoIndex].caption}
+                src={storyPhotos[activePhotoIndex].url}
+                alt={storyPhotos[activePhotoIndex].caption}
                 draggable={false}
                 className="w-full max-h-[60vh] object-contain rounded-xl bg-espresso/5 pointer-events-none select-none"
               />
 
               <p className="font-script text-3xl sm:text-4xl text-rust mt-3.5 pointer-events-none">
-                {allPhotos[activePhotoIndex].caption}
+                {storyPhotos[activePhotoIndex].caption}
               </p>
 
-              {allPhotos[activePhotoIndex].storyNote && (
+              {storyPhotos[activePhotoIndex].storyNote && (
                 <p className="text-xs sm:text-sm text-espresso/80 max-w-xl mx-auto mt-1.5 leading-relaxed pointer-events-none">
-                  {allPhotos[activePhotoIndex].storyNote}
+                  {storyPhotos[activePhotoIndex].storyNote}
                 </p>
               )}
 
               <p className="text-[10px] text-espresso/45 uppercase tracking-widest mt-3 pointer-events-none">
-                Memory {activePhotoIndex + 1} of {allPhotos.length} • Swipe to browse
+                Moment {activePhotoIndex + 1} of {storyPhotos.length} • Swipe to browse
               </p>
             </motion.div>
 
@@ -665,7 +532,7 @@ export const GallerySection: React.FC = () => {
               type="button"
               onClick={handleNext}
               aria-label="Next photo"
-              className="fixed right-3 sm:right-8 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center transition-colors z-10"
+              className="fixed right-3 sm:right-8 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center transition-colors z-10 cursor-pointer"
             >
               <ChevronRight className="w-6 h-6" />
             </button>

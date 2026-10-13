@@ -97,7 +97,7 @@ export const weddingConfig = {
   schedule: {
     // ISO date string for the live countdown & calendar invite
     isoDate: '2026-12-21T14:30:00+08:00',
-    endIsoDate: '2026-12-21T20:30:00+08:00',
+    endIsoDate: '2026-12-21T18:00:00+08:00',
     dayOfWeek: 'MONDAY',
     dateFormatted: '21st DECEMBER 2026',
     timeFormatted: 'at 2:30 in the afternoon',
@@ -122,7 +122,7 @@ export const weddingConfig = {
     rightPhoto: '/photos/shairas-hall-exterior.jpg',
   },
 
-  // 4. WEDDING TIMELINE (Moved 30 minutes earlier, starting at 2:30 PM)
+  // 4. WEDDING TIMELINE (Exact match with the Bride's updated Timeline Card)
   timeline: [
     {
       time: '2:30 PM',
@@ -132,7 +132,7 @@ export const weddingConfig = {
     },
     {
       time: '3:30 PM',
-      title: 'Photo Session',
+      title: 'Photo Op',
       subtitle: 'Portraits with family & entourage',
       icon: 'camera',
     },
@@ -143,20 +143,20 @@ export const weddingConfig = {
       icon: 'music',
     },
     {
-      time: '5:30 PM',
+      time: '5:00 PM',
       title: 'Dinner',
       subtitle: 'Wedding feast & fellowship',
       icon: 'utensils',
     },
     {
-      time: '6:30 PM',
-      title: 'Celebration',
-      subtitle: 'Music, dancing & sparkling send-off',
+      time: '5:30 PM',
+      title: 'Send Off',
+      subtitle: 'Music, cheers & sparkling send-off',
       icon: 'sparkles',
     },
   ] as TimelineItem[],
 
-  // 5. ENTOURAGE / NUPTIAL ROLL
+  // 5. ENTOURAGE / NUPTIAL ROLL (Exact match with the Bride's updated Entourage Cards)
   entourage: {
     groomGrandparents: [] as { name: string; place: string }[],
     brideGrandparents: [] as { name: string; place: string }[],
@@ -177,9 +177,10 @@ export const weddingConfig = {
       { ninong: 'ROLANDO DAMIAN', ninang: 'EDENIA DAMIAN' },
       { ninong: 'ROLAND GAJUSAN', ninang: 'LOURDES BUSTAMANTE' },
       { ninong: 'FERNANDO CORPUZ', ninang: 'ZENAIDA CORPUZ' },
-      { ninong: '', ninang: 'PRISCILLA BATO-ESCAMA' },
+      { ninong: 'ELIZAR ESPINO', ninang: 'PRISCILLA ESCAMA' },
     ] as SponsorPair[],
-    secondarySponsorsSubtitle: 'TO ASSIST US IN OUR NEEDS & GUIDE US IN OUR WAY',
+    entourageSubtitle: 'TO ASSIST US IN OUR NEEDS',
+    secondarySponsorsSubtitle: 'TO GUIDE US IN OUR WAY',
     bestMan: 'MARLON LIBAO',
     matronsOfHonor: [
       'JUNAREIN BRUSAS',
@@ -190,32 +191,32 @@ export const weddingConfig = {
       subtitle: 'To light our path',
       members: ['BRYAN SERVITO', 'EMMIE LOU PARISTA'],
     },
-    veil: {
-      title: 'VEIL',
-      subtitle: 'To clothe us as one',
-      members: ['JAN DREX FABIA', 'HANNAH MAE MARZAN'],
-    },
     cord: {
       title: 'CORD',
       subtitle: 'To bind us together',
       members: ['JOSHUA FLORES', 'AMELIA JOY DE VERA'],
     },
+    veil: {
+      title: 'VEIL',
+      subtitle: 'To clothe us as one',
+      members: ['JAN DREX FABIA', 'HANNAH MAE MARZAN'],
+    },
     groomsmen: [
-      'BRYAN SERVITO',
       'DIOSDADO BATRINA',
-      'JAN DREX FABIA',
+      'BRYAN SERVITO',
       'JOSHUA FLORES',
+      'JANDREX FABIA',
     ],
     bridesmaids: [
-      'EMMIE LOU PARISTA',
       'MELODY TERMINEZ',
-      'HANNAH MAE MARZAN',
+      'EMMIE LOU PARISTA',
       'AMELIA JOY DE VERA',
+      'HANNAH MAE MARZAN',
     ],
     bearers: {
       ring: {
         title: 'RING BEARER',
-        subtitle: 'To carry our symbol of love & God’s sacred covenant',
+        subtitle: 'To carry the symbol of love, treasure and faith',
         name: 'EZRAEL TERMINEZ',
       },
       coin: {
@@ -234,14 +235,14 @@ export const weddingConfig = {
       subtitle: 'To shower our aisle with flowers',
       members: [
         'ISAIAH LEANNE ANCHETA',
-        'JARRAH RAELYN RAMOS',
+        'JARAH RAELYNNE RAMOS',
         'SHEKINAH HALOG',
       ],
     },
     petOfHonor: null as { role: string; name: string; breedOrNote: string } | null,
   },
 
-  // 6. DRESS CODE & COLOR PALETTE (Exact 4 colors from the couple's Details card)
+  // 6. DRESS CODE & COLOR PALETTE (Exact 5 colors from the couple's Details card)
   dressCode: {
     guests: {
       title: 'DRESS CODE',
@@ -263,28 +264,34 @@ export const weddingConfig = {
     },
     swatches: [
       {
-        name: 'Soft Blush Pink',
-        hex: '#EACCCE',
-        role: 'Blush Motif',
-        attireTip: 'Romantic blush chiffon gowns, soft petal dresses, or delicate floral-toned coordinates.',
+        name: 'Sage Green',
+        hex: '#BDC8B7',
+        role: 'Bridesmaids Motif',
+        attireTip: 'Reserved for the bridesmaids. Delicate sage green gowns and coordinates.',
       },
       {
-        name: 'Warm Coral Rose',
-        hex: '#DF7F66',
-        role: 'Coral Rose Motif',
-        attireTip: 'Warm coral-rose dresses, terracotta-peach silk separates, or statement ties and pocket squares.',
+        name: 'Slate Sage',
+        hex: '#879383',
+        role: 'Botanical Slate',
+        attireTip: 'Muted slate-sage gowns, tailored blazers, dark-sage ties or formal coordinates.',
       },
       {
-        name: 'Deep Olive Sage',
-        hex: '#6D7156',
-        role: 'Deep Sage Motif',
-        attireTip: 'Elegant floor-length olive-sage gowns, tailored blazers, or formal dark-sage coordinates.',
+        name: 'Champagne',
+        hex: '#EFE2D3',
+        role: 'Ninangs & Guests',
+        attireTip: 'Floor-length Champagne formal gowns for Ninangs, or elegant ivory cream for guests.',
       },
       {
-        name: 'Warm Moss Green',
-        hex: '#9B9968',
-        role: 'Botanical Olive',
-        attireTip: 'Soft moss-olive dresses, light formal coordinates, or subtle botanical accessories.',
+        name: 'Blush Pink',
+        hex: '#F0C4C2',
+        role: 'Ninongs Necktie & Guests',
+        attireTip: 'Blush pink neckties with Barong Tagalog/Suits for Ninongs, or romantic petal pink dresses.',
+      },
+      {
+        name: 'Rose Beige',
+        hex: '#D1B19F',
+        role: 'Ninangs & Guests',
+        attireTip: 'Floor-length Rose Beige or Rose Gold gowns for Ninangs, or warm dusty rose attire for guests.',
       },
     ] as ColorSwatch[],
   },
@@ -300,7 +307,7 @@ export const weddingConfig = {
     unplugged: {
       title: 'UNPLUGGED CEREMONY',
       message:
-        'The greatest gift you can give us today is to be truly present. During the ceremony, please silence and tuck away all phones and cameras so our photographers can capture this sacred moment with you.',
+        'We invite you to be fully present with us; please turn off all phones and cameras during the ceremony.',
     },
     hashtagNote: {
       title: 'OUR HASHTAG',
@@ -531,7 +538,7 @@ export const weddingConfig = {
         ?.VITE_GOOGLE_SHEET_WEB_APP_URL ||
       'https://script.google.com/macros/s/AKfycbxmyYwioApINP3Y3pdhRIJJm0ooXl9kzqkAgWLQDToyGNt_QrU0PsxE0APKvqfUZ6U09Q/exec',
     deadlineText:
-      'A favor of your reply is requested on or before December 1, 2026 • Message Mary Grace Terminez at 0916-345-5595 or thru FB/Messenger',
+      'We have reserved seat(s) for you. A favor of your reply is requested on or before December 1, 2026 • Message us at 09163455595 or thru FB/Messenger',
   },
 
   // 10. INITIAL GUESTBOOK WISHES (Empty so only real Google Sheet RSVPs are shown)

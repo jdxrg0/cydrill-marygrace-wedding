@@ -292,7 +292,6 @@ export const MinimalInvitationView: React.FC = () => {
     photos.gallery.find((p) => p.id === 'photo-46') || photos.saveTheDateTriptych[1],
     photos.saveTheDateTriptych[2],
   ];
-  const allStudioPortraits = photos.gallery;
 
   // Live Countdown State
   const calculateTimeLeft = () => {
@@ -310,7 +309,6 @@ export const MinimalInvitationView: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
   const [selectedSwatch, setSelectedSwatch] = useState<ColorSwatch>(dressCode.swatches[0]);
   const [copiedHashtag, setCopiedHashtag] = useState(false);
-  const [showAllPortraits, setShowAllPortraits] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // RSVP & Guestbook State (Shares storage with main design so wishes stay synced)
@@ -521,7 +519,7 @@ export const MinimalInvitationView: React.FC = () => {
                       {couple.monogram}
                     </span>
                     <span className="text-[7px] sm:text-[8px] uppercase tracking-[0.2em] text-[#FAF0F1]/90 hidden sm:block">
-                      2027
+                      2026
                     </span>
                   </div>
                 </div>
@@ -983,12 +981,12 @@ export const MinimalInvitationView: React.FC = () => {
             </div>
           </div>
 
-          {/* Secondary Sponsors, Bearers & Flower Girls */}
+          {/* The Entourage, Secondary Sponsors, Bearers & Flower Girls */}
           <div className="mt-8 bg-alabaster rounded-3xl p-6 sm:p-10 border border-terracotta/40 shadow-sm text-center space-y-8">
             <div>
-              <h3 className="font-script text-4xl sm:text-5xl text-rust">Secondary Sponsors</h3>
+              <h3 className="font-script text-4xl sm:text-5xl text-rust">The Entourage</h3>
               <p className="text-xs tracking-[0.25em] uppercase text-terracotta font-semibold mt-1">
-                {entourage.secondarySponsorsSubtitle}
+                {entourage.entourageSubtitle}
               </p>
               <StationeryOrnament />
             </div>
@@ -1012,8 +1010,17 @@ export const MinimalInvitationView: React.FC = () => {
               </div>
             </div>
 
+            {/* Secondary Sponsors Header (Before Candle, Cord, Veil) */}
+            <div className="pt-4 border-t border-sand-dark/40">
+              <h3 className="font-script text-4xl sm:text-5xl text-rust">Secondary Sponsors</h3>
+              <p className="text-xs tracking-[0.25em] uppercase text-terracotta font-semibold mt-1">
+                {entourage.secondarySponsorsSubtitle}
+              </p>
+              <StationeryOrnament />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {[entourage.candle, entourage.veil, entourage.cord].map((group) => (
+              {[entourage.candle, entourage.cord, entourage.veil].map((group) => (
                 <div
                   key={group.title}
                   className="bg-sand-light rounded-2xl p-5 border border-sand-dark"
@@ -1132,10 +1139,10 @@ export const MinimalInvitationView: React.FC = () => {
                 {dressCode.guests.note}
               </p>
 
-              <div className="grid grid-cols-4 gap-3 sm:gap-6 max-w-sm sm:max-w-lg mx-auto mt-7">
+              <div className="grid grid-cols-5 gap-1.5 sm:gap-4 max-w-sm sm:max-w-2xl mx-auto mt-7">
                 {dressCode.swatches.map((swatch) => {
                   const isSelected = selectedSwatch.hex === swatch.hex;
-                  const isLightSwatch = ['#EACCCE', '#E8C5C8', '#CCD8C8'].includes(
+                  const isLightSwatch = ['#BDC8B7', '#EFE2D3', '#F0C4C2', '#D1B19F', '#EACCCE', '#E8C5C8', '#CCD8C8'].includes(
                     swatch.hex.toUpperCase()
                   );
                   return (
@@ -1144,24 +1151,24 @@ export const MinimalInvitationView: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedSwatch(swatch)}
                       className={`flex flex-col items-center focus:outline-none transition-transform ${
-                        isSelected ? 'scale-110' : 'hover:scale-105'
+                        isSelected ? 'scale-105 sm:scale-110' : 'hover:scale-105'
                       }`}
                     >
                       <div
-                        className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full shadow-sm flex items-center justify-center border-2 ${
-                          isSelected ? 'border-espresso ring-4 ring-blush-rose/35' : 'border-white'
+                        className={`w-11 h-11 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full shadow-sm flex items-center justify-center border-2 ${
+                          isSelected ? 'border-espresso ring-2 sm:ring-4 ring-blush-rose/35' : 'border-white'
                         }`}
                         style={{ backgroundColor: swatch.hex }}
                       >
                         {isSelected && (
                           <Check
-                            className={`w-5 h-5 drop-shadow ${
+                            className={`w-3.5 h-3.5 sm:w-5 sm:h-5 drop-shadow ${
                               isLightSwatch ? 'text-espresso' : 'text-white'
                             }`}
                           />
                         )}
                       </div>
-                      <span className="text-xs font-semibold text-espresso mt-2">
+                      <span className="text-[9px] sm:text-xs font-semibold text-espresso mt-1.5 sm:mt-2 text-center leading-tight">
                         {swatch.name}
                       </span>
                     </button>
@@ -1329,115 +1336,42 @@ export const MinimalInvitationView: React.FC = () => {
 
           {/* 3-Photo Fine-Art Matted Triptych */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-center">
-            {curatedPortraits.map((photo, index) => {
-              const fullIdx = allStudioPortraits.findIndex((p) => p.url === photo.url);
-              return (
-                <motion.button
-                  key={photo.url}
-                  type="button"
-                  onClick={() => setLightboxIndex(fullIdx !== -1 ? fullIdx : index)}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.12, duration: 0.6 }}
-                  className={`group bg-alabaster p-4 sm:p-5 border border-terracotta/45 shadow-sm text-center focus:outline-none ${
-                    index === 1 ? 'boho-arch md:-translate-y-4' : 'rounded-2xl'
+            {curatedPortraits.map((photo, index) => (
+              <motion.button
+                key={photo.url}
+                type="button"
+                onClick={() => setLightboxIndex(index)}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.12, duration: 0.6 }}
+                className={`group bg-alabaster p-4 sm:p-5 border border-terracotta/45 shadow-sm text-center focus:outline-none ${
+                  index === 1 ? 'boho-arch md:-translate-y-4' : 'rounded-2xl'
+                }`}
+              >
+                <div
+                  className={`overflow-hidden aspect-[3/4] bg-sand-light relative ${
+                    index === 1 ? 'boho-arch' : 'rounded-xl'
                   }`}
                 >
-                  <div
-                    className={`overflow-hidden aspect-[3/4] bg-sand-light relative ${
-                      index === 1 ? 'boho-arch' : 'rounded-xl'
-                    }`}
-                  >
-                    <img
-                      src={photo.url}
-                      alt={photo.caption}
-                      className="w-full h-full object-cover object-[50%_20%] group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-alabaster/85 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ZoomIn className="w-4 h-4 text-rust" />
-                    </div>
+                  <img
+                    src={photo.url}
+                    alt={photo.caption}
+                    className="w-full h-full object-cover object-[50%_20%] group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-alabaster/85 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-4 h-4 text-rust" />
                   </div>
-                  <p className="font-script text-2xl sm:text-3xl text-rust mt-3">{photo.caption}</p>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* Smoothly Expandable Full 46-Portrait Studio Archive */}
-          <div className="mt-10 text-center">
-            <button
-              type="button"
-              onClick={() => setShowAllPortraits((prev) => !prev)}
-              className="inline-flex items-center gap-2 bg-sand-light hover:bg-blush-light/80 text-rust border border-terracotta/40 px-6 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-semibold shadow-sm transition-all duration-300"
-            >
-              <span>
-                {showAllPortraits
-                  ? 'Hide Full Studio Roll'
-                  : `Explore All ${allStudioPortraits.length} Studio Portraits`}
-              </span>
-              <motion.span
-                animate={{ rotate: showAllPortraits ? 180 : 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="inline-flex"
-              >
-                <ChevronDown className="w-4 h-4 text-terracotta" />
-              </motion.span>
-            </button>
-
-            <AnimatePresence initial={false}>
-              {showAllPortraits && (
-                <motion.div
-                  key="minimal-full-studio-roll"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{
-                    height: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
-                    opacity: { duration: 0.35, ease: 'easeInOut' },
-                  }}
-                  className="overflow-hidden"
-                >
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-8 text-left">
-                    {allStudioPortraits.map((photo, idx) => (
-                      <button
-                        key={photo.id}
-                        type="button"
-                        onClick={() => setLightboxIndex(idx)}
-                        className="group bg-alabaster p-1.5 pb-2 rounded-xl border border-terracotta/35 shadow-sm hover:shadow-md transition-all focus:outline-none"
-                      >
-                        <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-sand-light">
-                          <img
-                            src={
-                              photo.url.startsWith('/photos/') &&
-                              !photo.url.startsWith('/photos/thumbs/')
-                                ? photo.url.replace('/photos/', '/photos/thumbs/')
-                                : photo.url
-                            }
-                            alt={photo.caption}
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full h-full object-cover object-[50%_20%] group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <span className="absolute top-1.5 left-1.5 bg-espresso/70 text-alabaster text-[9px] font-mono px-1.5 py-0.5 rounded">
-                            #{String(idx + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <p className="font-script text-base text-rust text-center mt-1.5 truncate px-1">
-                          {photo.caption}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+                <p className="font-script text-2xl sm:text-3xl text-rust mt-3">{photo.caption}</p>
+              </motion.button>
+            ))}
           </div>
         </div>
 
-        {/* Lightbox Modal for All 46 Studio Portraits */}
+        {/* Lightbox Modal for Curated Portraits */}
         <AnimatePresence>
-          {lightboxIndex !== null && (
+          {lightboxIndex !== null && curatedPortraits[lightboxIndex] && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1449,7 +1383,7 @@ export const MinimalInvitationView: React.FC = () => {
                 type="button"
                 onClick={() => setLightboxIndex(null)}
                 aria-label="Close lightbox"
-                className="fixed top-5 right-5 w-10 h-10 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center"
+                className="fixed top-5 right-5 w-10 h-10 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1459,25 +1393,25 @@ export const MinimalInvitationView: React.FC = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxIndex(
-                    (lightboxIndex - 1 + allStudioPortraits.length) % allStudioPortraits.length
+                    (lightboxIndex - 1 + curatedPortraits.length) % curatedPortraits.length
                   );
                 }}
                 aria-label="Previous portrait"
-                className="fixed left-4 sm:left-8 w-11 h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center"
+                className="fixed left-4 sm:left-8 w-11 h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center cursor-pointer"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
 
               <motion.div
-                key={allStudioPortraits[lightboxIndex].id}
+                key={curatedPortraits[lightboxIndex].url}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.25}
                 onDragEnd={(_e, info) => {
                   if (info.offset.x < -50 || info.velocity.x < -300) {
-                    setLightboxIndex((prev) => (prev !== null ? (prev + 1) % allStudioPortraits.length : null));
+                    setLightboxIndex((prev) => (prev !== null ? (prev + 1) % curatedPortraits.length : null));
                   } else if (info.offset.x > 50 || info.velocity.x > 300) {
-                    setLightboxIndex((prev) => (prev !== null ? (prev - 1 + allStudioPortraits.length) % allStudioPortraits.length : null));
+                    setLightboxIndex((prev) => (prev !== null ? (prev - 1 + curatedPortraits.length) % curatedPortraits.length : null));
                   }
                 }}
                 initial={{ scale: 0.94, opacity: 0, x: 20 }}
@@ -1488,16 +1422,16 @@ export const MinimalInvitationView: React.FC = () => {
                 className="max-w-3xl w-full bg-alabaster p-4 sm:p-6 rounded-2xl shadow-2xl text-center touch-pan-y cursor-grab active:cursor-grabbing select-none"
               >
                 <img
-                  src={allStudioPortraits[lightboxIndex].url}
-                  alt={allStudioPortraits[lightboxIndex].caption}
+                  src={curatedPortraits[lightboxIndex].url}
+                  alt={curatedPortraits[lightboxIndex].caption}
                   draggable={false}
                   className="w-full max-h-[70vh] object-contain rounded-lg pointer-events-none select-none"
                 />
                 <p className="font-script text-3xl text-rust mt-3 pointer-events-none">
-                  {allStudioPortraits[lightboxIndex].caption}
+                  {curatedPortraits[lightboxIndex].caption}
                 </p>
                 <p className="text-[10px] text-espresso/50 uppercase tracking-widest mt-1 pointer-events-none">
-                  Portrait {lightboxIndex + 1} of {allStudioPortraits.length} • Swipe to browse
+                  Portrait {lightboxIndex + 1} of {curatedPortraits.length} • Swipe to browse
                 </p>
               </motion.div>
 
@@ -1505,10 +1439,10 @@ export const MinimalInvitationView: React.FC = () => {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex((lightboxIndex + 1) % allStudioPortraits.length);
+                  setLightboxIndex((lightboxIndex + 1) % curatedPortraits.length);
                 }}
                 aria-label="Next portrait"
-                className="fixed right-4 sm:right-8 w-11 h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center"
+                className="fixed right-4 sm:right-8 w-11 h-11 rounded-full bg-alabaster/15 hover:bg-alabaster/30 text-alabaster flex items-center justify-center cursor-pointer"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>

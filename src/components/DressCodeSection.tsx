@@ -53,10 +53,12 @@ export const DressCodeSection: React.FC = () => {
               <span>Tap a swatch to preview attire inspiration</span>
             </p>
 
-            <div className="grid grid-cols-4 gap-2.5 sm:gap-6 max-w-sm sm:max-w-xl mx-auto">
+            <div className="grid grid-cols-5 gap-1.5 sm:gap-4 max-w-sm sm:max-w-2xl mx-auto">
               {dressCode.swatches.map((swatch) => {
                 const isSelected = selectedSwatch.hex === swatch.hex;
-                const isLightSwatch = swatch.hex.toUpperCase() === '#EACCCE';
+                const isLightSwatch = ['#BDC8B7', '#EFE2D3', '#F0C4C2', '#D1B19F', '#EACCCE'].includes(
+                  swatch.hex.toUpperCase()
+                );
                 return (
                   <button
                     key={swatch.hex}
@@ -67,7 +69,7 @@ export const DressCodeSection: React.FC = () => {
                     }`}
                   >
                     <div
-                      className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full shadow-md flex items-center justify-center transition-all duration-300 border-2 sm:border-4 ${
+                      className={`w-11 h-11 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full shadow-md flex items-center justify-center transition-all duration-300 border-2 sm:border-4 ${
                         isSelected
                           ? 'border-espresso ring-2 sm:ring-4 ring-blush-rose/45'
                           : 'border-[#FAFBF9]'
@@ -84,7 +86,7 @@ export const DressCodeSection: React.FC = () => {
                             transition={{ duration: 0.22, ease: 'easeOut' }}
                           >
                             <Check
-                              className={`w-4 h-4 sm:w-6 sm:h-6 drop-shadow ${
+                              className={`w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 drop-shadow ${
                                 isLightSwatch ? 'text-espresso' : 'text-white'
                               }`}
                             />
@@ -92,10 +94,10 @@ export const DressCodeSection: React.FC = () => {
                         )}
                       </AnimatePresence>
                     </div>
-                    <span className="text-[10px] sm:text-xs font-semibold text-espresso mt-2 leading-tight text-center">
+                    <span className="text-[9px] sm:text-xs font-semibold text-espresso mt-1.5 sm:mt-2 leading-tight text-center">
                       {swatch.name}
                     </span>
-                    <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-espresso/60">
+                    <span className="hidden sm:inline text-[9.5px] uppercase tracking-wider text-espresso/60">
                       {swatch.hex}
                     </span>
                   </button>
