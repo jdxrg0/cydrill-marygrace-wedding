@@ -8,6 +8,7 @@ export const HeroSection: React.FC = () => {
   const { couple, schedule, location, photos } = weddingConfig;
   const slides = photos.heroSlides?.length ? photos.heroSlides : [photos.heroPortrait];
   const [activeSlide, setActiveSlide] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -17,10 +18,30 @@ export const HeroSection: React.FC = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 45) {
+      if (diff > 0) {
+        setActiveSlide((prev) => (prev + 1) % slides.length);
+      } else {
+        setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+      }
+    }
+    setTouchStartX(null);
+  };
+
   return (
     <section
       id="home"
-      className="relative min-h-[92vh] sm:min-h-screen w-full flex flex-col justify-between overflow-hidden bg-espresso"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="relative min-h-[92vh] sm:min-h-screen w-full flex flex-col justify-between overflow-hidden bg-espresso touch-pan-y"
     >
       {/* Full-Bleed Couple Portrait Crossfade Slideshow with Subtle Ken Burns Zoom */}
       <div className="absolute inset-0 z-0">
