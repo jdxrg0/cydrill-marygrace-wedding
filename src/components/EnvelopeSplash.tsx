@@ -1233,17 +1233,8 @@ export const EnvelopeSplash: React.FC<EnvelopeSplashProps> = ({
           transition={{ duration: 0.35 }}
           className="w-full max-w-md z-20 mt-3 sm:mt-5 flex flex-col items-center gap-2 sm:gap-2.5 text-center"
         >
-          {/* Interactive Prompt or Direct Button */}
-          {stage === 'idle' ? (
-            <button
-              type="button"
-              onClick={handleOpen}
-              className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-espresso hover:text-terracotta bg-alabaster/95 hover:bg-white px-5 py-2 rounded-full border border-champagne/80 shadow-sm hover:shadow transition-all flex items-center gap-2 group cursor-pointer active:scale-95 touch-manipulation whitespace-nowrap"
-            >
-              <span>Open Invitation</span>
-              <ArrowRight className="w-3.5 h-3.5 text-terracotta group-hover:translate-x-1 transition-transform" />
-            </button>
-          ) : stage === 'card-peeking' ? (
+          {/* Interactive Prompt for subsequent stages */}
+          {stage === 'card-peeking' ? (
             <button
               type="button"
               onClick={handleRevealCard}
