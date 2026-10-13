@@ -1468,22 +1468,38 @@ export const MinimalInvitationView: React.FC = () => {
                 <ChevronLeft className="w-6 h-6" />
               </button>
 
-              <div
+              <motion.div
+                key={allStudioPortraits[lightboxIndex].id}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.25}
+                onDragEnd={(_e, info) => {
+                  if (info.offset.x < -50 || info.velocity.x < -300) {
+                    setLightboxIndex((prev) => (prev !== null ? (prev + 1) % allStudioPortraits.length : null));
+                  } else if (info.offset.x > 50 || info.velocity.x > 300) {
+                    setLightboxIndex((prev) => (prev !== null ? (prev - 1 + allStudioPortraits.length) % allStudioPortraits.length : null));
+                  }
+                }}
+                initial={{ scale: 0.94, opacity: 0, x: 20 }}
+                animate={{ scale: 1, opacity: 1, x: 0 }}
+                exit={{ scale: 0.94, opacity: 0, x: -20 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
                 onClick={(e) => e.stopPropagation()}
-                className="max-w-3xl w-full bg-alabaster p-4 sm:p-6 rounded-2xl shadow-2xl text-center"
+                className="max-w-3xl w-full bg-alabaster p-4 sm:p-6 rounded-2xl shadow-2xl text-center touch-pan-y cursor-grab active:cursor-grabbing select-none"
               >
                 <img
                   src={allStudioPortraits[lightboxIndex].url}
                   alt={allStudioPortraits[lightboxIndex].caption}
-                  className="w-full max-h-[70vh] object-contain rounded-lg"
+                  draggable={false}
+                  className="w-full max-h-[70vh] object-contain rounded-lg pointer-events-none select-none"
                 />
-                <p className="font-script text-3xl text-rust mt-3">
+                <p className="font-script text-3xl text-rust mt-3 pointer-events-none">
                   {allStudioPortraits[lightboxIndex].caption}
                 </p>
-                <p className="text-[10px] text-espresso/50 uppercase tracking-widest mt-1">
-                  Portrait {lightboxIndex + 1} of {allStudioPortraits.length}
+                <p className="text-[10px] text-espresso/50 uppercase tracking-widest mt-1 pointer-events-none">
+                  Portrait {lightboxIndex + 1} of {allStudioPortraits.length} • Swipe to browse
                 </p>
-              </div>
+              </motion.div>
 
               <button
                 type="button"
