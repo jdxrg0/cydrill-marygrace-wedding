@@ -330,7 +330,7 @@ export const weddingConfig = {
     ],
     saveTheDateTriptych: [
       {
-        url: '/photos/grace-cydrill-04.jpg',
+        url: '/photos/grace-cydrill-07.jpg',
         caption: 'Two hearts, one prayer',
       },
       {
